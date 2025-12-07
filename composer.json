@@ -1,0 +1,24 @@
+{
+    "name": "dacs/figureworld",
+    "description": "E-commerce website for anime, Gundam and Marvel figures",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DACS Team",
+            "email": "team@dacs.local"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {},
+    "autoload": {
+        "psr-4": {
+            "DACS\\": "src/"
+        }
+    },
+    "autoload-dev": {}
+}
+
+

@@ -1,0 +1,489 @@
+/* ====== 1. RESET & GLOBAL ====== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    outline: none;
+}
+
+body.product-page {
+    font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ====== 2. LAYOUT CONTAINER ====== */
+.product-layout {
+    max-width: 1200px;
+    margin: 140px auto 60px;
+    padding: 0 15px; /* Giảm padding ngoài một chút cho màn hình nhỏ */
+}
+
+.product-main-card {
+    display: flex;
+    gap: 40px; /* Giảm khoảng cách giữa 2 cột lớn (Ảnh - Thông tin) cho cân đối */
+    /* QUAN TRỌNG: Giảm padding từ 40px xuống 25px để ảnh sát lề hơn */
+    padding: 25px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    margin-bottom: 30px;
+}
+
+/* ====== 3. GALLERY (BÊN TRÁI) ====== */
+.product-gallery {
+    /* Cho Gallery kích thước vừa đủ nội dung thay vì flex: 1 để tránh bị giãn */
+    flex: 0 0 auto;
+    display: flex;
+    /* Giảm gap để cột thumb và ảnh to gần nhau hơn */
+    gap: 12px;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* Cột Thumbnail */
+.thumb-column {
+    display: flex;
+    flex-direction: column;
+    width: 80px;
+    flex-shrink: 0;
+    gap: 8px; /* Khoảng cách giữa các nút scroll và ảnh */
+}
+
+/* Nút Scroll */
+.thumb-scroll-btn {
+    width: 100%;
+    height: 28px; /* Nhỏ gọn lại xíu */
+    border: 1px solid #eee;
+    background: #f9f9f9;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.thumb-scroll-btn:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.thumb-scroll-btn i { font-size: 12px; }
+
+/* List ảnh nhỏ */
+.thumb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Khoảng cách giữa các ảnh */
+    width: 100%;
+    height: 432px; /* Tính toán lại cho khớp: 5 ảnh x (80+8) - gap cuối */
+    overflow: hidden;
+}
+
+.thumb-item {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #eee;
+    padding: 0;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.thumb-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.thumb-item:hover {
+    border-color: #999;
+    opacity: 0.8;
+}
+
+.thumb-item.active {
+    border: 2px solid #e60012;
+    opacity: 1;
+}
+
+/* Ảnh lớn */
+.main-image-wrap {
+    width: 500px;
+    height: 500px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.main-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ====== 4. INFO (BÊN PHẢI) ====== */
+.product-info {
+    flex: 1; /* Phần Info sẽ chiếm hết khoảng trống còn lại */
+    display: flex;
+    flex-direction: column;
+    padding-left: 0; /* Bỏ padding thừa */
+}
+
+.product-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #000;
+    text-transform: uppercase;
+    line-height: 1.3;
+}
+
+.product-tags {
+    margin-bottom: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: flex;
+    gap: 20px;
+    letter-spacing: 0.5px;
+}
+
+.tag-status { color: #e60012; }
+.tag-brand { color: #666; }
+
+.product-price {
+    font-size: 34px;
+    font-weight: 700;
+    color: #e60012;
+    margin-bottom: 22px;
+    letter-spacing: -0.5px;
+}
+
+.product-short {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.product-meta {
+    display: table;
+    width: 100%;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+.meta-row { display: table-row; }
+
+.meta-label {
+    display: table-cell;
+    width: 130px;
+    color: #666;
+    padding-bottom: 10px;
+}
+
+.meta-value {
+    display: table-cell;
+    font-weight: 600;
+    color: #222;
+    padding-bottom: 10px;
+}
+
+.meta-value.meta-ok {
+    color: #2e7d32;
+}
+
+/* Số lượng */
+.qty-block { margin-bottom: 30px; }
+.qty-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    color: #333;
+}
+.qty-control {
+    display: inline-flex;
+    height: 44px;
+    border: 1px solid #ddd;
+    background: #fff;
+}
+.qty-btn {
+    width: 44px;
+    height: 100%;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #333;
+    transition: background 0.2s;
+}
+.qty-btn:hover { background: #f2f2f2; }
+.qty-input {
+    width: 60px;
+    height: 100%;
+    border: none;
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #000;
+}
+
+/* Actions */
+.product-actions {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.btn {
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 30px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 0;
+    white-space: nowrap;
+}
+
+.btn i { margin-right: 8px; font-size: 16px; }
+
+.btn-primary {
+    background: #e60012;
+    color: #ffffff;
+    border: 1px solid #e60012;
+    flex-grow: 1;
+    max-width: 280px;
+}
+.btn-primary:hover {
+    background: #cc0010;
+    border-color: #cc0010;
+}
+
+.btn-outline {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+}
+.btn-outline:hover {
+    border-color: #333;
+    background: #fafafa;
+}
+
+/* ====== 5. ACCORDION ====== */
+.product-accordion-card {
+    background: transparent; /* Không màu nền */
+    box-shadow: none;        /* Bỏ bóng đổ */
+    border: none;            /* Bỏ viền bao quanh */
+    border-radius: 0;        /* Bỏ bo góc */
+    margin-top: 40px;
+    padding: 0;
+}
+
+/* 2. Tạo đường kẻ ngang sắc nét cho từng mục */
+.accordion-item {
+    /* Đường kẻ dưới màu xám đậm hơn */
+    border-bottom: 1px solid #b0b0b0;
+}
+
+/* Thêm đường kẻ trên cùng cho mục đầu tiên để giống hình mẫu */
+.accordion-item:first-child {
+    border-top: 1px solid #b0b0b0;
+}
+
+/* 3. Header: Font chữ ĐẬM, ĐEN, IN HOA */
+.accordion-header {
+    width: 100%;
+    padding: 18px 0; /* Khoảng cách trên dưới vừa phải */
+    background: transparent;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+
+    /* Typography chuẩn "Sang" */
+    font-size: 16px;       /* Chữ to rõ */
+    color: #111;           /* Đen tuyền (thay vì xám lờ nhờ) */
+    text-transform: uppercase;
+    letter-spacing: 0.5px; /* Giãn chữ nhẹ cho thoáng */
+    transition: all 0.2s ease;
+}
+
+/* Hover vào thì chữ chuyển màu đỏ nhẹ hoặc xám sáng hơn chút */
+.accordion-header:hover {
+    color: #555;
+}
+
+/* Icon dấu cộng (+) nhỏ gọn, tinh tế */
+.accordion-header i {
+    font-size: 12px; /* Icon nhỏ lại mới sang */
+    color: #333;     /* Icon màu đen */
+    transition: transform 0.3s ease;
+    font-weight: bold;
+}
+
+/* Khi mở ra */
+.accordion-item.open .accordion-header {
+    color: #000; /* Vẫn giữ màu đen hoặc đổi màu tùy thích */
+}
+
+.accordion-item.open .accordion-header i {
+    transform: rotate(45deg); /* Xoay dấu + thành dấu x */
+}
+
+/* Nội dung bên trong */
+.accordion-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Hiệu ứng trượt mượt mà */
+    color: #444;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.accordion-panel p,
+.accordion-panel ul {
+    padding: 20px 0 30px 0; /* Cách ra một chút so với đường kẻ */
+}
+
+.accordion-panel ul {
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+.accordion-panel ul li {
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.accordion-panel ul li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: #777;
+    font-weight: bold;
+}
+
+/* ====== 6. RELATED PRODUCTS ====== */
+.related-products {
+    margin-top: 60px;
+}
+
+.related-title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    border-left: 4px solid #e60012;
+    padding-left: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Lưới sản phẩm liên quan */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+/* Card sản phẩm nhỏ */
+.product-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    border-color: #d0d0d0;
+}
+
+.product-image {
+    width: 100%;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+/* Thông tin trong card */
+.product-card .product-info {
+    padding: 12px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.product-card .product-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    text-transform: none;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+.product-price--highlight {
+    color: #e60012;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 900px) {
+    .product-main-card {
+        flex-direction: column;
+        padding: 20px;
+    }
+    .product-info { padding-left: 0; }
+    /* Giảm kích thước ảnh to trên mobile để khỏi tràn */
+    .main-image-wrap { width: 100%; height: auto; aspect-ratio: 1/1; }
+    .product-actions { flex-direction: column; }
+    .btn { width: 100%; max-width: 100%; }
+
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .product-image img {
+        height: 200px;
+    }
+}
+
+@media (max-width: 640px) {
+    .product-gallery { flex-direction: column-reverse; }
+    .thumb-column { width: 100%; gap: 0; }
+    .thumb-scroll-btn { display: none; }
+    .thumb-list { flex-direction: row; height: auto; overflow-x: auto; padding-bottom: 5px; }
+    .thumb-item { width: 70px; height: 70px; flex-shrink: 0; }
+}

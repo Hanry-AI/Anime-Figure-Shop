@@ -1,0 +1,46 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Uploads (giữ lại cấu trúc nhưng ignore nội dung)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Database
+*.sql
+*.db
+
+# Composer
+composer.lock
+
+# Build files
+dist/
+build/
+
+

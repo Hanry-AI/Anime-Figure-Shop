@@ -1,0 +1,236 @@
+:root {
+    --z-header: 20;
+    --z-dropdown: 30;
+    --z-cart-overlay: 40;
+    --z-cart-drawer: 50;
+    --z-toast: 100;
+    --z-loading: 60;
+}
+.toast {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    /* QUAN TRỌNG: Dùng biến thay vì số cứng */
+    z-index: var(--z-toast, 100);
+    
+    /* Animation nhẹ nhàng (Bonus cho bạn) */
+    animation: slideIn 0.3s ease forwards;
+}
+/* Các màu sắc trạng thái */
+.toast.success { background-color: #16a34a; }
+.toast.warning { background-color: #f97316; }
+.toast.info    { background-color: #2563eb; }
+.toast.error   { background-color: #dc2626; }
+
+.newsletter {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, #e53e3e 0%, #9c1a1a 100%);
+    color: #fff;
+}
+
+.newsletter-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.newsletter h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.newsletter p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.newsletter-input {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+}
+
+.newsletter-btn {
+    padding: 1rem 2rem;
+    background: #ff6b6b;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.newsletter-btn:hover {
+    background: #ff5252;
+    transform: translateY(-2px);
+}
+
+.footer {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 3rem 0 1rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    margin-bottom: 1rem;
+    color: #ff6b6b;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+    color: #ccc;
+    transition: color 0.2s;
+}
+
+.footer-section ul li a:hover {
+    color: #ff6b6b;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-links a {
+    color: #ccc;
+    font-size: 1.5rem;
+    transition: 0.2s;
+}
+
+.social-links a:hover {
+    color: #ff6b6b;
+    transform: translateY(-3px);
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+/* Cột bên trái (tên + giá + nút) */
+.cart-item > div:first-child {
+    flex: 1;
+}
+
+/* Tên sản phẩm */
+.cart-item-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+/* Giá đơn vị dưới tên */
+.cart-item-sub {
+    font-size: 0.82rem;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+/* Thành tiền bên phải */
+.cart-item-price {
+    font-weight: 600;
+    color: #111827;
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+/* Cụm nút + / - / Xóa */
+.cart-item-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    background: #f9fafb;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+}
+
+/* Nút +/- */
+.cart-qty-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: none;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.cart-qty-btn:hover {
+    background: #d1d5db;
+    transform: translateY(-1px);
+}
+
+/* Số lượng ở giữa */
+.cart-qty-value {
+    min-width: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+/* Nút Xóa */
+.cart-remove-btn {
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    margin-left: 2px;
+}
+
+.cart-remove-btn:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}

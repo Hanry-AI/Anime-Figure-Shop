@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../../src/Models/User.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /DACS/templates/pages/auth_index.php?action=login');
+    header('Location: /DACS/views/pages/auth_index.php?action=login');
     exit;
 }
 

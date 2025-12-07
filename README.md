@@ -85,7 +85,7 @@ Tất cả ảnh sẽ được lưu trực tiếp vào thư mục `public/assets
 │   ├── Controllers/        # Xử lý logic
 │   ├── Models/             # Tương tác Database
 │   └── Helpers/            # Hàm tiện ích
-└── templates/              # Views (HTML/PHP)
+└── views/              # Views (HTML/PHP)
     ├── layouts/            # header.php, footer.php
     ├── pages/              # Các trang
     └── admin/              # Trang quản trị

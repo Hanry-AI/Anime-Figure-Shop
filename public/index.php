@@ -18,7 +18,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
     <!-- CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="../templates/layouts/header.css">
+    <link rel="stylesheet" href="../views/layouts/header.css">
 </head>
 <body data-logged-in="<?= $isLoggedIn ? '1' : '0'; ?>">
     <!-- Loading overlay -->
@@ -26,7 +26,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
         <div class="spinner"></div>
     </div>
 
-    <?php include __DIR__ . '/../templates/layouts/header.php'; ?>
+    <?php include __DIR__ . '/../views/layouts/header.php'; ?>
 
     <!-- HERO -->
     <section class="hero">
@@ -93,7 +93,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
             </div>
 
             <div class="category-grid">
-                <a class="category-card" href="../templates/pages/anime_index.php">
+                <a class="category-card" href="../views/pages/anime_index.php">
                     <div class="category-image">
                         <img src="assets/img/anime(2).webp" alt="Anime">
                     </div>
@@ -109,7 +109,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
                     </div>
                 </a>
 
-                <a class="category-card" href="../templates/pages/gundam_index.php">
+                <a class="category-card" href="../views/pages/gundam_index.php">
                     <div class="category-image">
                         <img src="assets/img/gundam.jpg" alt="Gundam">
                     </div>
@@ -125,7 +125,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
                     </div>
                 </a>
 
-                <a class="category-card" href="../templates/pages/marvel_index.php">
+                <a class="category-card" href="../views/pages/marvel_index.php">
                     <div class="category-image">
                         <img src="assets/img/marvel.jpg" alt="Marvel">
                     </div>
@@ -163,7 +163,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
                              data-name="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>"
                              data-price="<?= (float)$row['price']; ?>">
 
-                            <a href="../templates/pages/product.php?id=<?= (int)$row['id']; ?>" class="product-image-link">
+                            <a href="../views/pages/product.php?id=<?= (int)$row['id']; ?>" class="product-image-link">
                                 <div class="product-image">
                                     <img src="<?= htmlspecialchars(normalizeImageUrl($row['img_url']), ENT_QUOTES, 'UTF-8'); ?>"
                                          alt="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -193,7 +193,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
         </div>
     </section>
 
-    <?php include __DIR__ . '/../templates/layouts/footer.php'; ?>
+    <?php include __DIR__ . '/../views/layouts/footer.php'; ?>
 
 </body>
 </html>

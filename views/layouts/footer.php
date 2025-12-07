@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/DACS/templates/layouts/footer.css">
+<link rel="stylesheet" href="/DACS/views/layouts/footer.css">
 
 <!-- FOOTER -->
 <footer class="footer">

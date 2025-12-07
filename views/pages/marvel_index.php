@@ -1,13 +1,7 @@
 <?php
-// 1. LOGIC: Chỉ gọi hàm lấy dữ liệu
-session_start();
-// Nhúng file Model vừa tạo (chú ý đường dẫn tương đối)
-require_once __DIR__ . '/../../src/Models/Product.php'; 
-
-// Gọi hàm lấy sản phẩm Anime (biến $conn lấy từ file db.php được require trong Product.php)
-$products = getProductsByCategory($conn, 'marvel'); 
-
-$isLoggedIn = isset($_SESSION['user_id']);
+// Controller đã truyền qua biến $products và $conn (nếu cần)
+// Controller cũng đã session_start() rồi
+$isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho chắc
 ?>
 
 <!DOCTYPE html>
@@ -294,7 +288,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             <div class="content-area">
                 <div class="shop-controls">
                     <div class="results-info">
-                        Hiển thị <strong id="resultCount"><?= count($products) ?></strong> sản phẩm
+                        Hiển thị <strong id="resultCount"><?= count($products ?? []) ?></strong> sản phẩm
                     </div>
 
                     <div class="controls-right">
@@ -322,7 +316,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                     <?php if (!empty($products)): ?>
                         <?php foreach ($products as $p): ?>
                             
-                            <?php include '../layouts/product_card.php'; ?>
+                            <?php include __DIR__ . '/../layouts/product_card.php'; ?>
                             
                         <?php endforeach; ?>
                     <?php else: ?>

@@ -21,11 +21,11 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
                 </li>
             <?php endif; ?>
             <li><a class="nav-link" href="/DACS/public/index.php">Trang chủ</a></li>
-            <li><a class="nav-link" href="/DACS/views/pages/anime_index.php">Anime</a></li>
-            <li><a class="nav-link" href="/DACS/views/pages/gundam_index.php">Gundam</a></li>
-            <li><a class="nav-link" href="/DACS/views/pages/marvel_index.php">Marvel</a></li>
-            <li><a class="nav-link" href="/DACS/views/pages/promo_index.php">Khuyến mãi</a></li>
-            <li><a class="nav-link" href="/DACS/views/pages/contact_index.php">Liên hệ</a></li>
+            <li><a class="nav-link" href="/DACS/public/index.php?page=anime">Anime</a></li>
+            <li><a class="nav-link" href="/DACS/public/index.php?page=gundam">Gundam</a></li>
+            <li><a class="nav-link" href="/DACS/public/index.php?page=marvel">Marvel</a></li>
+            <li><a class="nav-link" href="/DACS/public/index.php?page=promo">Khuyến mãi</a></li>
+            <li><a class="nav-link" href="/DACS/public/index.php?page=contact">Liên hệ</a></li>
         </ul>
 
         <div class="nav-actions">

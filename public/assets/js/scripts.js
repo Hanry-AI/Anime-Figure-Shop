@@ -232,7 +232,7 @@ function checkout() {
     // Tạo form POST ẩn gửi sang cart.php
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/DACS/pages/cart.php';
+    form.action = '/DACS/public/index.php?page=cart';
 
     // Chỉ gửi id + quantity, KHÔNG gửi price
     const payload = cart.map(function (item) {

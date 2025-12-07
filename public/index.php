@@ -7,19 +7,20 @@ define('PROJECT_ROOT', dirname(__DIR__));
 // --- 1. LOAD FILE CẤU HÌNH & CONTROLLER ---
 require_once PROJECT_ROOT . '/src/Config/db.php';
 require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
-require_once PROJECT_ROOT . '/src/Helpers/format_helper.php'; // <-- Thêm dòng này
+require_once PROJECT_ROOT . '/src/Helpers/format_helper.php';
 
 // Load các Controller thủ công (Sau này dùng Composer Autoload sẽ bỏ đoạn này)
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
-require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';  // <-- Mới thêm
-require_once PROJECT_ROOT . '/src/Controllers/PageController.php';  // <-- Mới thêm
+require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';
+require_once PROJECT_ROOT . '/src/Controllers/PageController.php';
 require_once PROJECT_ROOT . '/src/Controllers/ProductController.php'; // Đảm bảo bạn đã có file này
 
 // --- 2. KHAI BÁO SỬ DỤNG NAMESPACE ---
 use DACS\Controllers\AuthController;
 use DACS\Controllers\ProductController;
-use DACS\Controllers\HomeController;  // <-- Mới thêm
-use DACS\Controllers\PageController;  // <-- Mới thêm
+use DACS\Controllers\HomeController;
+use DACS\Controllers\PageController;
+use DACS\Controllers\CartController;
 
 // --- 3. ĐIỀU HƯỚNG (ROUTER) ---
 $page   = $_GET['page'] ?? 'home';
@@ -80,6 +81,11 @@ switch ($page) {
     case 'home':
     default:
         $controller = new HomeController();
+        $controller->index();
+        break;
+        
+    case 'cart':
+        $controller = new CartController();
         $controller->index();
         break;
 }

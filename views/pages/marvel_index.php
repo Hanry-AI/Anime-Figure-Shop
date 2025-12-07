@@ -334,7 +334,6 @@ $isLoggedIn = isset($_SESSION['user_id']);
     </main>
 
     <?php include __DIR__ . '/../layouts/footer.php'; ?>
-    <script src="/DACS/public/assets/js/scripts.js"></script>
     <script src="/DACS/public/assets/js/page.js"></script>
 </body>
 </html>

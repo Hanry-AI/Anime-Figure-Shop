@@ -1,54 +1,7 @@
 <?php
-session_start();
-// Gọi Model User
-require_once __DIR__ . '/../../src/Models/User.php'; 
-
-$errors = ['login' => '', 'register' => ''];
-
-// LOGOUT
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    session_destroy();
-    header('Location: /DACS/index.php');
-    exit;
-}
-
-// XỬ LÝ POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. Xử lý Đăng Nhập
-    if (isset($_POST['login_email'])) {
-        $user = loginUser($conn, $_POST['login_email'], $_POST['login_password']);
-        if ($user) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
-            header('Location: /DACS/index.php');
-            exit;
-        } else {
-            $errors['login'] = 'Email hoặc mật khẩu không đúng.';
-        }
-    }
-    // 2. Xử lý Đăng Ký
-    elseif (isset($_POST['register_email'])) {
-        $name = $_POST['register_name'];
-        $email = $_POST['register_email'];
-        $pass = $_POST['register_password'];
-        $confirm = $_POST['confirm_password'];
-
-        if ($pass !== $confirm) {
-            $errors['register'] = 'Mật khẩu xác nhận không khớp.';
-        } else {
-            $result = registerUser($conn, $name, $email, $pass);
-            if (is_numeric($result)) { // Trả về ID (số) là thành công
-                $_SESSION['user_id'] = $result;
-                $_SESSION['user_name'] = $name;
-                header('Location: /DACS/index.php');
-                exit;
-            } else {
-                $errors['register'] = $result; // Trả về chuỗi là lỗi
-            }
-        }
-    }
-}
+// Đảm bảo biến tồn tại (phòng trường hợp quên truyền)
+$errors   = $errors   ?? ['login' => '', 'register' => ''];
+$oldInput = $oldInput ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -88,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             name="login_email"
                             placeholder="example@email.com"
                             required
-                            value="<?php echo isset($_POST['login_email']) ? htmlspecialchars($_POST['login_email']) : ''; ?>"
+                            value="<?php echo isset($oldInput['login_email']) ? htmlspecialchars($oldInput['login_email']) : ''; ?>"
                         >
                     </div>
                 </div>
@@ -160,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             name="register_name"
                             placeholder="Nguyễn Văn A"
                             required
-                            value="<?php echo isset($_POST['register_name']) ? htmlspecialchars($_POST['register_name']) : ''; ?>"
+                            value="<?php echo isset($oldInput['register_name']) ? htmlspecialchars($oldInput['register_name']) : ''; ?>"
                         >
                     </div>
                 </div>

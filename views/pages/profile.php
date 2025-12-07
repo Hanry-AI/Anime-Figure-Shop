@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Thông tin tài khoản</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/DACS/public/assets/css/profile_styles.css">
+    <link rel="stylesheet" href="/DACS/public/assets/css/styles.css">
     <link rel="stylesheet" href="../layouts/header.css">
 </head>
 <body class="profile-page">
@@ -113,5 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 
 <script src="/DACS/public/assets/js/profile.js"></script>
+<script src="/DACS/public/assets/js/scripts.js"></script>
 </body>
 </html>

@@ -1,12 +1,20 @@
 <?php
-session_start();
-// Gọi Model
-require_once __DIR__ . '/../src/Models/Product.php';
+// LƯU Ý: Không cần session_start() ở đây nữa vì Router đã lo rồi.
 
+// Gọi Model Product
+// Đi lùi 2 cấp: views/pages/ -> views/ -> root/ -> src/Models/
+require_once __DIR__ . '/../../src/Models/Product.php';
+
+// Kiểm tra đăng nhập
 $isLoggedIn = isset($_SESSION['user_id']);
 
-// Lấy sản phẩm nổi bật
-$featuredProducts = getFeaturedProducts($conn, 10);
+// Lấy sản phẩm nổi bật (Hàm này nằm trong src/Models/Product.php)
+// Thêm kiểm tra kết nối $conn để tránh lỗi nếu chưa include db
+if (isset($conn)) {
+    $featuredProducts = getFeaturedProducts($conn, 10);
+} else {
+    $featuredProducts = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -18,7 +26,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
     <!-- CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="../views/layouts/header.css">
+    <link rel="stylesheet" href="../layouts/header.css">
 </head>
 <body data-logged-in="<?= $isLoggedIn ? '1' : '0'; ?>">
     <!-- Loading overlay -->
@@ -26,7 +34,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
         <div class="spinner"></div>
     </div>
 
-    <?php include __DIR__ . '/../views/layouts/header.php'; ?>
+    <?php include __DIR__ . '/../layouts/header.php'; ?>
 
     <!-- HERO -->
     <section class="hero">
@@ -193,7 +201,7 @@ $featuredProducts = getFeaturedProducts($conn, 10);
         </div>
     </section>
 
-    <?php include __DIR__ . '/../views/layouts/footer.php'; ?>
+    <?php include __DIR__ . '/../layouts/footer.php'; ?>
 
 </body>
 </html>

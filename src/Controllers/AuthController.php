@@ -85,7 +85,7 @@ class AuthController {
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
 
-            header('Location: /DACS/index.php');
+            header('Location: /DACS/public/index.php');
             exit;
         }
 
@@ -109,7 +109,7 @@ class AuthController {
             $_SESSION['user_id']   = $result;
             $_SESSION['user_name'] = $name;
 
-            header('Location: /DACS/index.php');
+            header('Location: /DACS/public/index.php');
             exit;
         }
 
@@ -123,7 +123,7 @@ class AuthController {
         $_SESSION = [];
         session_destroy();
 
-        header('Location: /DACS/index.php');
+        header('Location: /DACS/public/index.php');
         exit;
     }
 }

@@ -12,16 +12,9 @@
     "require": {
         "php": ">=7.4"
     },
-    "require-dev": {},
     "autoload": {
         "psr-4": {
             "DACS\\": "src/"
         }
-    },
-    "autoload-dev": {}
+    }
 }
-
-
-
-
-

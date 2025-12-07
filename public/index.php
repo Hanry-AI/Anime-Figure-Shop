@@ -4,20 +4,28 @@ session_start();
 // Định nghĩa đường dẫn gốc
 define('PROJECT_ROOT', dirname(__DIR__));
 
-// Nhúng các file cấu hình và Controller
+// --- 1. LOAD FILE CẤU HÌNH & CONTROLLER ---
 require_once PROJECT_ROOT . '/src/Config/db.php';
 require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
+
+// Load các Controller thủ công (Sau này dùng Composer Autoload sẽ bỏ đoạn này)
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
+require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';  // <-- Mới thêm
+require_once PROJECT_ROOT . '/src/Controllers/PageController.php';  // <-- Mới thêm
+require_once PROJECT_ROOT . '/src/Controllers/ProductController.php'; // Đảm bảo bạn đã có file này
 
-use DACS\Controllers\ProductController;
+// --- 2. KHAI BÁO SỬ DỤNG NAMESPACE ---
 use DACS\Controllers\AuthController;
+use DACS\Controllers\ProductController;
+use DACS\Controllers\HomeController;  // <-- Mới thêm
+use DACS\Controllers\PageController;  // <-- Mới thêm
 
-// --- ĐÂY LÀ LỄ TÂN (ROUTER) ---
-$page = $_GET['page'] ?? 'home';
+// --- 3. ĐIỀU HƯỚNG (ROUTER) ---
+$page   = $_GET['page'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
 
 switch ($page) {
-    // 1. Khu vực Tài khoản
+    // --- KHU VỰC TÀI KHOẢN ---
     case 'auth':
     case 'login':
     case 'register':
@@ -29,7 +37,7 @@ switch ($page) {
         }
         break;
 
-    // 2. Các trang danh mục
+    // --- CÁC TRANG SẢN PHẨM (Đã có Controller) ---
     case 'anime':
         $controller = new ProductController();
         $controller->indexAnime();
@@ -45,28 +53,33 @@ switch ($page) {
         $controller->indexMarvel();
         break;
 
-    // 3. Trang chi tiết sản phẩm (QUAN TRỌNG: Đây là phần bạn đang thiếu)
-    case 'product':
-        require_once PROJECT_ROOT . '/views/pages/product.php';
+    // --- CÁC TRANG KHÁC (Bây giờ dùng PageController) ---
+    
+    case 'product': // Chi tiết sản phẩm
+        $controller = new PageController();
+        $controller->productDetail();
         break;
 
-    // 4. Các trang khác
     case 'contact':
-        require_once PROJECT_ROOT . '/views/pages/contact_index.php';
+        $controller = new PageController();
+        $controller->contact();
         break;
 
     case 'promo':
-        require_once PROJECT_ROOT . '/views/pages/promo_index.php';
+        $controller = new PageController();
+        $controller->promo();
         break;
         
     case 'profile':
-        require_once PROJECT_ROOT . '/views/pages/profile.php';
+        $controller = new PageController();
+        $controller->profile();
         break;
 
-    // 5. Trang chủ (Mặc định)
+    // --- TRANG CHỦ ---
     case 'home':
     default:
-        require_once PROJECT_ROOT . '/views/pages/index.php'; 
+        $controller = new HomeController();
+        $controller->index();
         break;
 }
 ?>

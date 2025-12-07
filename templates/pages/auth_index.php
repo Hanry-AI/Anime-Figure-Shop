@@ -1,112 +1,50 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../src/Config/db.php'; // kết nối CSDL (mysqli) dùng biến $conn
+// Gọi Model User
+require_once __DIR__ . '/../../src/Models/User.php'; 
 
-// Mảng chứa lỗi cho 2 form
-$errors = [
-    'login'    => '',
-    'register' => ''
-];
+$errors = ['login' => '', 'register' => ''];
 
-// ---- XỬ LÝ ĐĂNG XUẤT (?action=logout) ----
+// LOGOUT
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    $_SESSION = [];
-    session_unset();
     session_destroy();
-
     header('Location: /DACS/index.php');
     exit;
 }
 
-// ---- XỬ LÝ FORM (POST) ----
+// XỬ LÝ POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    // ====== FORM ĐĂNG NHẬP ======
+    // 1. Xử lý Đăng Nhập
     if (isset($_POST['login_email'])) {
-        $email    = trim($_POST['login_email'] ?? '');
-        $password = $_POST['login_password'] ?? '';
-
-        if ($email === '' || $password === '') {
-            $errors['login'] = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+        $user = loginUser($conn, $_POST['login_email'], $_POST['login_password']);
+        if ($user) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['role'];
+            header('Location: /DACS/index.php');
+            exit;
         } else {
-            $stmt = $conn->prepare(
-                "SELECT id, name, email, password_hash, role FROM users WHERE email = ?"
-            );
-
-            if ($stmt) {
-                $stmt->bind_param('s', $email);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $user   = $result->fetch_assoc();
-                $stmt->close();
-
-                if ($user && password_verify($password, $user['password_hash'])) {
-                    $_SESSION['user_id']   = $user['id'];
-                    $_SESSION['user_name'] = $user['name'];
-                    $_SESSION['user_role'] = $user['role'];
-
-                    header('Location: /DACS/index.php');
-                    exit;
-                } else {
-                    $errors['login'] = 'Email hoặc mật khẩu không đúng.';
-                }
-            } else {
-                $errors['login'] = 'Không thể kết nối CSDL.';
-            }
+            $errors['login'] = 'Email hoặc mật khẩu không đúng.';
         }
+    }
+    // 2. Xử lý Đăng Ký
+    elseif (isset($_POST['register_email'])) {
+        $name = $_POST['register_name'];
+        $email = $_POST['register_email'];
+        $pass = $_POST['register_password'];
+        $confirm = $_POST['confirm_password'];
 
-    // ====== FORM ĐĂNG KÝ ======
-    } elseif (isset($_POST['register_email'])) {
-        $name            = trim($_POST['register_name'] ?? '');
-        $email           = trim($_POST['register_email'] ?? '');
-        $password        = $_POST['register_password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
-
-        if ($name === '' || $email === '' || $password === '' || $confirmPassword === '') {
-            $errors['register'] = 'Vui lòng nhập đầy đủ thông tin.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors['register'] = 'Email không hợp lệ.';
-        } elseif ($password !== $confirmPassword) {
+        if ($pass !== $confirm) {
             $errors['register'] = 'Mật khẩu xác nhận không khớp.';
         } else {
-            // Kiểm tra email đã tồn tại chưa
-            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-            if ($stmt) {
-                $stmt->bind_param('s', $email);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $stmt->close();
-
-                if ($result->num_rows > 0) {
-                    $errors['register'] = 'Email này đã được sử dụng.';
-                } else {
-                    // Thêm tài khoản mới
-                    $hash = password_hash($password, PASSWORD_DEFAULT);
-
-                    $stmtInsert = $conn->prepare(
-                        "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)"
-                    );
-                    if ($stmtInsert) {
-                        $stmtInsert->bind_param('sss', $name, $email, $hash);
-
-                        if ($stmtInsert->execute()) {
-                            // Đăng ký xong cho đăng nhập luôn
-                            $_SESSION['user_id']   = $stmtInsert->insert_id;
-                            $_SESSION['user_name'] = $name;
-
-                            $stmtInsert->close();
-                            header('Location: /DACS/index.php');
-                            exit;
-                        } else {
-                            $errors['register'] = 'Có lỗi xảy ra, vui lòng thử lại.';
-                            $stmtInsert->close();
-                        }
-                    } else {
-                        $errors['register'] = 'Không thể kết nối CSDL.';
-                    }
-                }
+            $result = registerUser($conn, $name, $email, $pass);
+            if (is_numeric($result)) { // Trả về ID (số) là thành công
+                $_SESSION['user_id'] = $result;
+                $_SESSION['user_name'] = $name;
+                header('Location: /DACS/index.php');
+                exit;
             } else {
-                $errors['register'] = 'Không thể kết nối CSDL.';
+                $errors['register'] = $result; // Trả về chuỗi là lỗi
             }
         }
     }

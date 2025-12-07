@@ -154,4 +154,34 @@ function deleteProduct($conn, $id) {
     $stmt->bind_param("i", $id);
     return $stmt->execute();
 }
+
+/**
+ * [ADMIN] Thêm sản phẩm mới
+ */
+function addProduct($conn, $name, $category, $price, $mainImg, $extraImgs = []) {
+    // 1. Insert Product
+    $sql = "INSERT INTO products (name, category, price, image_url) VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ssis', $name, $category, $price, $mainImg);
+    
+    if ($stmt->execute()) {
+        $newId = $stmt->insert_id;
+        $stmt->close();
+
+        // 2. Insert Extra Images (nếu có)
+        if (!empty($extraImgs)) {
+            $sqlImg = "INSERT INTO product_images (product_id, image_url, sort_order) VALUES (?, ?, ?)";
+            $stmtImg = $conn->prepare($sqlImg);
+            $order = 1;
+            foreach ($extraImgs as $img) {
+                $stmtImg->bind_param('isi', $newId, $img, $order);
+                $stmtImg->execute();
+                $order++;
+            }
+            $stmtImg->close();
+        }
+        return $newId;
+    }
+    return false;
+}
 ?>

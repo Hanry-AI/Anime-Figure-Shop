@@ -1,132 +1,106 @@
 <?php
 session_start();
 
-// 1. Cấu hình & Kết nối CSDL
+// 1. Cấu hình & Kết nối
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', __DIR__ . '/../..');
 }
-require_once PROJECT_ROOT . '/src/Config/db.php';
+// Gọi Model Product
+require_once PROJECT_ROOT . '/src/Models/Product.php';
 
-// --- CẤU HÌNH QUAN TRỌNG (ĐÃ FIX LỖI) ---
+// Định nghĩa thư mục upload nếu chưa có (thường nên để trong constants.php)
+if (!defined('UPLOAD_DIR')) define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
+if (!defined('DB_IMG_PATH')) define('DB_IMG_PATH', '/DACS/public/assets/img/');
 
-// 1. Đường dẫn lưu file trên ổ cứng (File System)
-// PROJECT_ROOT đã là thư mục dự án (D:/xampp/htdocs/DACS)
-// Nên chỉ cần nối thêm /public/assets/img/ là đủ.
-define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
-
-// 2. Đường dẫn hiển thị trên web (URL)
-// Trình duyệt cần biết tên dự án (/DACS) để tìm đúng ảnh
-define('DB_IMG_PATH', '/DACS/public/assets/img/');
-
-// 2. Hàm tiện ích
+// Hàm tiện ích escape output
 function e($string) {
-    return htmlspecialchars((string)$string, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
 }
 
-// Hàm xử lý upload 1 file
+// Hàm xử lý upload 1 file (Giữ lại hàm helper này ở đây hoặc chuyển vào src/Helpers)
 function processUpload($fileInput, $targetDir) {
-    // 1. Kiểm tra lỗi upload cơ bản
     if (!isset($fileInput['name']) || $fileInput['error'] !== UPLOAD_ERR_OK) {
         return null;
     }
-
-    // 2. Vẫn giữ kiểm tra định dạng ảnh (để tránh upload nhầm file virus/php)
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!in_array($fileInput['type'], $allowedTypes)) {
         return false;
     }
-    // 3. LẤY TÊN GỐC TUYỆT ĐỐI
-    // basename() chỉ để đảm bảo không bị hack đường dẫn, còn lại giữ nguyên tên bạn đặt.
     $filename = basename($fileInput['name']);
-    $targetFilePath = $targetDir . $filename;
+    // Thêm timestamp để tránh trùng tên file
+    $targetName = time() . '_' . $filename; 
+    $targetFilePath = $targetDir . $targetName;
     
     if (move_uploaded_file($fileInput['tmp_name'], $targetFilePath)) {
-        return $filename;
+        return $targetName;
     }
     return false;
 }
 
-// 3. Khởi tạo biến
 $errors = [];
 $successMessage = '';
 $name = $category = $priceRaw = '';
 
-// 4. Xử lý Form Submit
+// 2. Xử lý Form Submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
     $category = trim($_POST['category'] ?? '');
     $priceRaw = trim($_POST['price'] ?? '');
     
+    // Validate cơ bản
     if ($name === '')     $errors[] = 'Tên sản phẩm là bắt buộc.';
     if ($category === '') $errors[] = 'Danh mục là bắt buộc.';
     if ($priceRaw === '') $errors[] = 'Giá là bắt buộc.';
 
-    if (empty($_FILES['main_image']['name'])) {
-        $errors[] = 'Vui lòng chọn Ảnh chính từ máy tính.';
-    }
-
     $priceDigits = preg_replace('/[^\d]/', '', $priceRaw);
     $priceValue = ($priceDigits === '') ? 0 : (int)$priceDigits;
-    if ($priceValue === 0) $errors[] = 'Giá sản phẩm không hợp lệ.';
+    if ($priceValue <= 0) $errors[] = 'Giá sản phẩm phải lớn hơn 0.';
+
+    if (empty($_FILES['main_image']['name'])) {
+        $errors[] = 'Vui lòng chọn Ảnh chính.';
+    }
 
     if (empty($errors)) {
-        // --- XỬ LÝ UPLOAD ẢNH CHÍNH ---
-        $uploadedMainFile = processUpload($_FILES['main_image'], UPLOAD_DIR);
+        // --- Upload Ảnh Chính ---
+        $uploadedMain = processUpload($_FILES['main_image'], UPLOAD_DIR);
         
-        if ($uploadedMainFile === false) {
-            $errors[] = 'Lỗi upload ảnh (Sai định dạng hoặc không thể lưu).';
-        } elseif ($uploadedMainFile === null) {
-            $errors[] = 'Lỗi hệ thống upload.';
+        if ($uploadedMain === false) {
+            $errors[] = 'Lỗi upload ảnh chính (Sai định dạng hoặc lỗi server).';
+        } elseif ($uploadedMain === null) {
+            $errors[] = 'Vui lòng chọn ảnh chính hợp lệ.';
         } else {
-            // Đường dẫn lưu vào DB
-            $mainImageUrl = DB_IMG_PATH . $uploadedMainFile;
+            $mainImgUrl = DB_IMG_PATH . $uploadedMain;
 
-            // BƯỚC 1: Insert Products (Cần update các cột này cho khớp với bảng của bạn)
-            // Lưu ý: Nếu bảng của bạn không có cột overview, details... thì xóa bớt đi nhé
-            $sql = "INSERT INTO products (name, category, price, image_url) VALUES (?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-
-            if ($stmt) {
-                // Chỉ bind 4 tham số cơ bản (siss)
-                $stmt->bind_param('ssis', $name, $category, $priceValue, $mainImageUrl);
-
-                if ($stmt->execute()) {
-                    $newProductId = $stmt->insert_id;
-                    $stmt->close();
-
-                    // --- XỬ LÝ ẢNH PHỤ ---
-                    if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
-                        $sqlImg = "INSERT INTO product_images (product_id, image_url, sort_order) VALUES (?, ?, ?)";
-                        $stmtImg = $conn->prepare($sqlImg);
-                        $order = 1;
-                        $totalFiles = count($_FILES['extra_images']['name']);
-                        
-                        for ($i = 0; $i < $totalFiles; $i++) {
-                            $singleFile = [
-                                'name'     => $_FILES['extra_images']['name'][$i],
-                                'type'     => $_FILES['extra_images']['type'][$i],
-                                'tmp_name' => $_FILES['extra_images']['tmp_name'][$i],
-                                'error'    => $_FILES['extra_images']['error'][$i],
-                                'size'     => $_FILES['extra_images']['size'][$i]
-                            ];
-                            $uploadedExtra = processUpload($singleFile, UPLOAD_DIR);
-                            if ($uploadedExtra) {
-                                $extraUrl = DB_IMG_PATH . $uploadedExtra;
-                                $stmtImg->bind_param('isi', $newProductId, $extraUrl, $order);
-                                $stmtImg->execute();
-                                $order++;
-                            }
-                        }
-                        if($stmtImg) $stmtImg->close();
+            // --- Upload Ảnh Phụ ---
+            $extraImgUrls = [];
+            if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
+                $totalFiles = count($_FILES['extra_images']['name']);
+                for ($i = 0; $i < $totalFiles; $i++) {
+                    $singleFile = [
+                        'name'     => $_FILES['extra_images']['name'][$i],
+                        'type'     => $_FILES['extra_images']['type'][$i],
+                        'tmp_name' => $_FILES['extra_images']['tmp_name'][$i],
+                        'error'    => $_FILES['extra_images']['error'][$i],
+                        'size'     => $_FILES['extra_images']['size'][$i]
+                    ];
+                    $uploadedExtra = processUpload($singleFile, UPLOAD_DIR);
+                    if ($uploadedExtra) {
+                        $extraImgUrls[] = DB_IMG_PATH . $uploadedExtra;
                     }
-
-                    $successMessage = "Thêm thành công! (ID: {$newProductId}). Hãy ra trang chủ kiểm tra sản phẩm MỚI này.";
-                    $name = $category = $priceRaw = '';
-                } else {
-                    $errors[] = 'Lỗi DB: ' . $stmt->error;
                 }
+            }
+
+            // --- GỌI MODEL ĐỂ LƯU DB ---
+            // Hàm addProduct($conn, $name, $category, $price, $mainImg, $extraImgs)
+            // Bạn đã thêm hàm này vào src/Models/Product.php ở bước trước
+            $newId = addProduct($conn, $name, $category, $priceValue, $mainImgUrl, $extraImgUrls);
+
+            if ($newId) {
+                $successMessage = "Thêm thành công sản phẩm ID: $newId";
+                // Reset form
+                $name = $category = $priceRaw = ''; 
             } else {
-                $errors[] = 'Lỗi Prepare: ' . $conn->error;
+                $errors[] = "Lỗi khi lưu vào Database.";
             }
         }
     }
@@ -244,21 +218,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="/DACS/public/assets/js/scripts.js"></script>
     
     <script>
-        document.getElementById('btnAddImage').addEventListener('click', function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnAdd = document.getElementById('btnAddImage');
             const container = document.getElementById('extra-images-container');
-            const div = document.createElement('div');
-            div.className = 'input-group-dynamic';
-            
-            // Input file thay vì text
-            div.innerHTML = `
-                <div class="input-wrapper">
-                    <input type="file" name="extra_images[]" accept="image/*">
-                </div>
-                <button type="button" class="remove-img-btn" onclick="this.parentElement.remove()">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(div);
+
+            if (btnAdd && container) {
+                btnAdd.addEventListener('click', function() {
+                    const div = document.createElement('div');
+                    div.className = 'input-group-dynamic';
+                    div.innerHTML = `
+                        <div class="input-wrapper">
+                            <input type="file" name="extra_images[]" accept="image/*">
+                        </div>
+                        <button type="button" class="remove-img-btn" onclick="this.parentElement.remove()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
         });
     </script>
 </body>

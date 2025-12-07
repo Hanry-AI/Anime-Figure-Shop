@@ -1,15 +1,9 @@
 <?php
 session_start();
+require_once __DIR__ . '/../../src/Models/Product.php';
 
-if (!defined('PROJECT_ROOT')) {
-    define('PROJECT_ROOT', __DIR__ . '/../..');
-}
-require_once PROJECT_ROOT . '/src/Config/db.php';
-require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
-
-// Lấy danh sách sản phẩm mới nhất lên đầu
-$sql    = "SELECT * FROM products ORDER BY id DESC";
-$result = $conn->query($sql);
+// Thay thế đoạn SQL cũ bằng hàm này
+$products = getAllProducts($conn); 
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -21,7 +15,7 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="../partials/header.css">
     <style>
         body { font-family: sans-serif; background-color: #f8fafc; }
-        .admin-container { max-width: 1200px; margin: 130px auto 30px; auto; padding: 0 20px; }
+        .admin-container { max-width: 1200px; margin: 130px auto 30px; padding: 0 20px; }
 
         .admin-header {
             display: flex;
@@ -140,8 +134,8 @@ $result = $conn->query($sql);
         </tr>
         </thead>
         <tbody>
-        <?php if ($result && $result->num_rows > 0): ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
+            <?php if (!empty($products)): ?>
+                <?php foreach ($products as $row): ?>
                 <tr>
                     <td>#<?= (int)$row['id']; ?></td>
                     <td>
@@ -180,7 +174,7 @@ $result = $conn->query($sql);
                         </form>
                     </td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <tr>
                 <td colspan="6" style="text-align: center; padding: 30px; color: #64748b;">

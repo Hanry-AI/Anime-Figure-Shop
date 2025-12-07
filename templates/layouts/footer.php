@@ -87,7 +87,6 @@
             &times;
         </button>
     </div>
-
     <div class="cart-items" id="cartItems"></div>
 
     <div class="cart-footer">

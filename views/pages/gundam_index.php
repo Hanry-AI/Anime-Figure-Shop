@@ -13,7 +13,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/DACS/public/assets/css/page.css">
-    <link rel="stylesheet" href="../layouts/header.css">
+    <link rel="stylesheet" href="/DACS/views/layouts/header.css">
 </head>
 <body data-logged-in="<?= $isLoggedIn ? '1' : '0'; ?>">
     <?php include __DIR__ . '/../layouts/header.php'; ?>

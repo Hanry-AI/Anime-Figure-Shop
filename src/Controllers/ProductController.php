@@ -34,4 +34,31 @@ class ProductController {
         $products = getProductsByCategory($this->conn, 'marvel');
         require_once __DIR__ . '/../../views/pages/marvel_index.php';
     }
+
+    public function detail() {
+        // 1. Lấy ID từ URL, ép kiểu int để bảo mật
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        // 2. Lấy thông tin sản phẩm chính
+        $product = getProductById($this->conn, $id);
+
+        // Nếu không tìm thấy sản phẩm, đá về trang chủ
+        if (!$product) {
+            header('Location: /DACS/public/index.php');
+            exit;
+        }
+
+        // 3. Chuẩn bị các dữ liệu phụ trợ cho View
+        // - Lấy danh sách ảnh gallery
+        $images = getProductImages($this->conn, $id, $product['image_url']);
+        
+        // - Lấy sản phẩm liên quan (cùng category, trừ sản phẩm hiện tại)
+        $relatedProducts = getRelatedProducts($this->conn, $product['category'], $id);
+
+        // - ĐỊNH NGHĨA BIẾN $firstImg MÀ VIEW ĐANG CẦN CHO JS
+        $firstImg = $product['image_url']; 
+
+        // 4. Gọi View hiển thị
+        require_once __DIR__ . '/../../views/pages/product.php';
+    }
 }

@@ -1,20 +1,7 @@
 <?php
-// LƯU Ý: Không cần session_start() ở đây nữa vì Router đã lo rồi.
-
-// Gọi Model Product
-// Đi lùi 2 cấp: views/pages/ -> views/ -> root/ -> src/Models/
-require_once __DIR__ . '/../../src/Models/Product.php';
-
-// Kiểm tra đăng nhập
+// View này chỉ nhận dữ liệu từ HomeController
+// Biến $featuredProducts đã được Controller truyền sang
 $isLoggedIn = isset($_SESSION['user_id']);
-
-// Lấy sản phẩm nổi bật (Hàm này nằm trong src/Models/Product.php)
-// Thêm kiểm tra kết nối $conn để tránh lỗi nếu chưa include db
-if (isset($conn)) {
-    $featuredProducts = getFeaturedProducts($conn, 10);
-} else {
-    $featuredProducts = [];
-}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -26,7 +13,7 @@ if (isset($conn)) {
     <!-- CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="../layouts/header.css">
+    <link rel="stylesheet" href="/DACS/views/layouts/header.css">
 </head>
 <body data-logged-in="<?= $isLoggedIn ? '1' : '0'; ?>">
     <!-- Loading overlay -->

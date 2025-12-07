@@ -7,6 +7,7 @@ define('PROJECT_ROOT', dirname(__DIR__));
 // --- 1. LOAD FILE CẤU HÌNH & CONTROLLER ---
 require_once PROJECT_ROOT . '/src/Config/db.php';
 require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
+require_once PROJECT_ROOT . '/src/Helpers/format_helper.php'; // <-- Thêm dòng này
 
 // Load các Controller thủ công (Sau này dùng Composer Autoload sẽ bỏ đoạn này)
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
@@ -55,9 +56,9 @@ switch ($page) {
 
     // --- CÁC TRANG KHÁC (Bây giờ dùng PageController) ---
     
-    case 'product': // Chi tiết sản phẩm
-        $controller = new PageController();
-        $controller->productDetail();
+    case 'product':
+        $controller = new ProductController();
+        $controller->detail(); // Gọi hàm detail vừa tạo
         break;
 
     case 'contact':

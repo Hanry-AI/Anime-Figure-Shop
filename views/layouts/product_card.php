@@ -16,7 +16,7 @@ if (!function_exists('normalizeImageUrl')) {
      data-scale="<?= htmlspecialchars($p['scale'] ?? '') ?>"
      data-price="<?= (int)$p['price'] ?>">
 
-    <a href="../pages/product.php?id=<?= (int)$p['id'] ?>" class="product-thumb-link">
+    <a href="/DACS/public/index.php?page=product&id=<?= (int)$p['id'] ?>" class="product-thumb-link">
         <div class="product-image">
             <img src="<?= htmlspecialchars(normalizeImageUrl($p['image_url'] ?? null)) ?>"
                  alt="<?= htmlspecialchars($p['name']) ?>"
@@ -25,7 +25,7 @@ if (!function_exists('normalizeImageUrl')) {
     </a>
 
     <div class="product-info">
-        <a href="../pages/product.php?id=<?= (int)$p['id'] ?>" class="product-title-link">
+        <a href="/DACS/public/index.php?page=product&id=<?= (int)$p['id'] ?>" class="product-title-link">
             <div class="product-title">
                 <?= htmlspecialchars($p['name']) ?>
             </div>

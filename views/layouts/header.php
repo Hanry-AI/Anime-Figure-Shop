@@ -60,7 +60,7 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
                             <i class="fas fa-id-badge"></i>
                             <span>Thông tin tài khoản</span>
                         </a>
-                        <a href="/DACS/views/pages/auth_index.php?action=logout">
+                        <a href="/DACS/public/index.php?page=auth&action=logout">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Đăng xuất</span>
                         </a>
@@ -69,10 +69,10 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
             <?php else: ?>
                 <!-- CHƯA ĐĂNG NHẬP -->
                 <div class="auth-buttons">
-                    <a class="auth-btn login-btn" href="/DACS/index.php?page=auth">
+                    <a class="auth-btn login-btn" href="/DACS/public/index.php?page=auth&action=login">
                         <i class="fas fa-sign-in-alt"></i><span>Đăng nhập</span>
                     </a>
-                    <a class="auth-btn register-btn" href="/DACS/views/pages/auth_index.php?action=register">
+                    <a class="auth-btn register-btn" href="/DACS/public/index.php?page=auth&action=register">
                         <i class="fas fa-user-plus"></i><span>Đăng ký</span>
                     </a>
                 </div>

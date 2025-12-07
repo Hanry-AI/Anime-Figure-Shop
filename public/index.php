@@ -10,6 +10,7 @@ require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
 
 use DACS\Controllers\ProductController;
+use DACS\Controllers\AuthController;
 
 // --- ĐÂY LÀ LỄ TÂN (ROUTER) ---
 $page = $_GET['page'] ?? 'home';

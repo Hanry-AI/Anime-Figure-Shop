@@ -101,7 +101,7 @@ if (isset($conn)) {
             </div>
 
             <div class="category-grid">
-                <a class="category-card" href="../views/pages/anime_index.php">
+                <a class="category-card" href="index.php?page=anime">
                     <div class="category-image">
                         <img src="assets/img/anime(2).webp" alt="Anime">
                     </div>
@@ -117,7 +117,7 @@ if (isset($conn)) {
                     </div>
                 </a>
 
-                <a class="category-card" href="../views/pages/gundam_index.php">
+                <a class="category-card" href="index.php?page=gundam">
                     <div class="category-image">
                         <img src="assets/img/gundam.jpg" alt="Gundam">
                     </div>
@@ -133,7 +133,7 @@ if (isset($conn)) {
                     </div>
                 </a>
 
-                <a class="category-card" href="../views/pages/marvel_index.php">
+                <a class="category-card" href="index.php?page=marvel">
                     <div class="category-image">
                         <img src="assets/img/marvel.jpg" alt="Marvel">
                     </div>
@@ -171,7 +171,7 @@ if (isset($conn)) {
                              data-name="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>"
                              data-price="<?= (float)$row['price']; ?>">
 
-                            <a href="../views/pages/product.php?id=<?= (int)$row['id']; ?>" class="product-image-link">
+                            <a href="index.php?page=product&id=<?= (int)$row['id']; ?>">
                                 <div class="product-image">
                                     <img src="<?= htmlspecialchars(normalizeImageUrl($row['img_url']), ENT_QUOTES, 'UTF-8'); ?>"
                                          alt="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>">

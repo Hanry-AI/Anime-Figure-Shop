@@ -1,16 +1,12 @@
 <?php
 session_start();
-
-require __DIR__ . '/../src/Config/db.php';
-require_once __DIR__ . '/../src/Helpers/image_helper.php';
+// Gọi Model
+require_once __DIR__ . '/../src/Models/Product.php';
 
 $isLoggedIn = isset($_SESSION['user_id']);
 
-$sql = "SELECT id, name, price, image_url AS img_url
-        FROM products
-        ORDER BY id DESC
-        LIMIT 10";
-$result = $conn->query($sql);
+// Lấy sản phẩm nổi bật
+$featuredProducts = getFeaturedProducts($conn, 10);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -159,8 +155,9 @@ $result = $conn->query($sql);
             </div>
 
             <div class="products-grid" id="productsGrid">
-                <?php if ($result && $result->num_rows > 0): ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                <?php $featuredProducts = $featuredProducts ?? []; ?>
+                <?php if (!empty($featuredProducts)): ?>
+                    <?php foreach ($featuredProducts as $row): ?>
                         <div class="product-card"
                              data-id="<?= (int)$row['id']; ?>"
                              data-name="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -188,7 +185,7 @@ $result = $conn->query($sql);
                                 </div>
                             </div>
                         </div>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 <?php else: ?>
                     <p>Hiện chưa có sản phẩm nổi bật nào.</p>
                 <?php endif; ?>

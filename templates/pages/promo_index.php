@@ -216,7 +216,5 @@
             </div>
         </div>
     </div>
-
-    <script src="/DACS/public/assets/js/promo.js"></script>
 </body>
 </html>

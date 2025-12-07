@@ -1,28 +1,14 @@
 <?php
+// 1. LOGIC: Chỉ gọi hàm lấy dữ liệu
 session_start();
-require_once __DIR__ . '/../../src/Config/db.php';
-require_once __DIR__ . '/../../src/Helpers/image_helper.php';
+// Nhúng file Model vừa tạo (chú ý đường dẫn tương đối)
+require_once __DIR__ . '/../../src/Models/Product.php'; 
+
+// Gọi hàm lấy sản phẩm Anime (biến $conn lấy từ file db.php được require trong Product.php)
+$products = getProductsByCategory($conn, 'gundam'); 
+
 $isLoggedIn = isset($_SESSION['user_id']);
-$sql = "SELECT id, name, price, image_url, category, overview AS series, details AS brand, note AS scale
-        FROM products
-        WHERE category = 'gundam'
-        ORDER BY created_at DESC";
-
-$result   = $conn->query($sql);
-$products = [];
-
-if ($result && $result->num_rows > 0) {
-    $products = $result->fetch_all(MYSQLI_ASSOC);
-    // Normalize image URLs
-    foreach ($products as &$product) {
-        if (isset($product['image_url'])) {
-            $product['image_url'] = normalizeImageUrl($product['image_url']);
-        }
-    }
-    unset($product);
-}
 ?>
-
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -276,6 +262,5 @@ if ($result && $result->num_rows > 0) {
     <?php include __DIR__ . '/../layouts/footer.php'; ?>
 
     <script src="/DACS/public/assets/js/page.js"></script>
-    <script src="/DACS/public/assets/js/scripts.js"></script>
 </body>
 </html>

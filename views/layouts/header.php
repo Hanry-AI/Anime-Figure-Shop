@@ -69,7 +69,7 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
             <?php else: ?>
                 <!-- CHƯA ĐĂNG NHẬP -->
                 <div class="auth-buttons">
-                    <a class="auth-btn login-btn" href="/DACS/views/pages/auth_index.php?action=login">
+                    <a class="auth-btn login-btn" href="/DACS/index.php?page=auth">
                         <i class="fas fa-sign-in-alt"></i><span>Đăng nhập</span>
                     </a>
                     <a class="auth-btn register-btn" href="/DACS/views/pages/auth_index.php?action=register">

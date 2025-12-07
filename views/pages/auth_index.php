@@ -1,7 +1,8 @@
 <?php
-// Đảm bảo biến tồn tại (phòng trường hợp quên truyền)
+// Được Controller truyền vào
 $errors   = $errors   ?? ['login' => '', 'register' => ''];
 $oldInput = $oldInput ?? [];
+$isLoggedIn = $isLoggedIn ?? false;
 ?>
 <!DOCTYPE html>
 <html lang="vi">

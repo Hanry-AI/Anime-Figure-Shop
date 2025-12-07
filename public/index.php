@@ -9,7 +9,7 @@ require_once PROJECT_ROOT . '/src/Config/db.php';
 require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
 
-use DACS\Controllers\AuthController;
+use DACS\Controllers\ProductController;
 
 // --- ĐÂY LÀ LỄ TÂN (ROUTER) ---
 $page = $_GET['page'] ?? 'home';
@@ -30,15 +30,18 @@ switch ($page) {
 
     // 2. Các trang danh mục
     case 'anime':
-        require_once PROJECT_ROOT . '/views/pages/anime_index.php';
+        $controller = new ProductController();
+        $controller->indexAnime();
         break;
         
     case 'gundam':
-        require_once PROJECT_ROOT . '/views/pages/gundam_index.php';
+        $controller = new ProductController();
+        $controller->indexGundam();
         break;
         
     case 'marvel':
-        require_once PROJECT_ROOT . '/views/pages/marvel_index.php';
+        $controller = new ProductController();
+        $controller->indexMarvel();
         break;
 
     // 3. Trang chi tiết sản phẩm (QUAN TRỌNG: Đây là phần bạn đang thiếu)

@@ -64,7 +64,7 @@ class ProductController {
 
         // 3. Chuẩn bị các dữ liệu phụ trợ cho View
         // - Lấy danh sách ảnh gallery
-        $images = getProductImages($this->conn, $id, $product['image_url']);
+        $images = getProductImages($this->conn, $id);
         
         // - Lấy sản phẩm liên quan (cùng category, trừ sản phẩm hiện tại)
         $relatedProducts = getRelatedProducts($this->conn, $product['category'], $id);

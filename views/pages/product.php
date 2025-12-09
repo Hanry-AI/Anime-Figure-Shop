@@ -32,17 +32,17 @@
                 </button>
 
                 <div class="thumb-list" id="thumbList">
-                    <?php foreach ($images as $index => $url): ?>
+                    <?php foreach ($images as $index => $img): // Đổi tên biến $url thành $img để dễ hiểu ?>
                         <button
                             type="button"
                             class="thumb-item <?php echo $index === 0 ? 'active' : ''; ?>"
-                            data-full="<?php echo htmlspecialchars($url, ENT_QUOTES, 'UTF-8'); ?>"
+                            data-full="<?php echo htmlspecialchars($img['image_url'], ENT_QUOTES, 'UTF-8'); ?>"
                         >
                             <img
-                                src="<?php echo htmlspecialchars($url, ENT_QUOTES, 'UTF-8'); ?>"
+                                src="<?php echo htmlspecialchars($img['image_url'], ENT_QUOTES, 'UTF-8'); ?>"
                                 alt="<?php
                                     echo htmlspecialchars($product['name'], ENT_QUOTES, 'UTF-8')
-                                         . ' - hình ' . ($index + 1);
+                                        . ' - hình ' . ($index + 1);
                                 ?>"
                             >
                         </button>

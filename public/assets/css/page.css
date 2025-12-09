@@ -784,3 +784,44 @@ a {
         justify-content: space-between;
     }
 }
+
+/* Style cho phân trang */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    padding-bottom: 20px;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    gap: 8px;
+    padding: 0;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #374151;
+    font-weight: 600;
+    transition: all 0.2s;
+    background: white;
+}
+
+.page-link:hover {
+    background-color: #f3f4f6;
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
+.page-link.active {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}

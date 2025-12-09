@@ -4,18 +4,18 @@ require_once __DIR__ . '/../Config/db.php';
 require_once __DIR__ . '/../Helpers/image_helper.php';
 
 /**
- * 1. Lấy danh sách sản phẩm theo danh mục (Dùng cho trang Anime, Gundam...)
+ * 1. Lấy danh sách sản phẩm theo danh mục
  */
-function getProductsByCategory($conn, $category, $limit = 100) {
-    // Lấy image_url gốc từ DB
+function getProductsByCategory($conn, $category, $limit = 10, $offset = 0) {
     $sql = "SELECT id, name, price, image_url, category, overview AS series, details AS brand, note AS scale
             FROM products
             WHERE category = ?
             ORDER BY created_at DESC
-            LIMIT ?";
+            LIMIT ? OFFSET ?"; // <-- Thêm OFFSET
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $category, $limit);
+    // Sửa bind_param thành "sii" (string, int, int)
+    $stmt->bind_param("sii", $category, $limit, $offset);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -25,7 +25,6 @@ function getProductsByCategory($conn, $category, $limit = 100) {
         foreach ($products as &$p) {
             if (isset($p['image_url'])) {
                 $p['image_url'] = normalizeImageUrl($p['image_url']);
-                // Tự động tạo thêm key img_url để tương thích với mọi view cũ/mới
                 $p['img_url'] = $p['image_url']; 
             }
         }
@@ -33,12 +32,20 @@ function getProductsByCategory($conn, $category, $limit = 100) {
     $stmt->close();
     return $products;
 }
-
+// 2. Thêm hàm mới để đếm tổng số sản phẩm (Dùng tính số trang)
+function countProductsByCategory($conn, $category) {
+    $sql = "SELECT COUNT(*) as total FROM products WHERE category = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $category);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $result['total'] ?? 0;
+}
 /**
- * 2. Lấy sản phẩm nổi bật (Dùng cho trang chủ index.php)
+ * 2. Lấy sản phẩm nổi bật
  */
 function getFeaturedProducts($conn, $limit = 10) {
-    // Trang chủ đang dùng 'img_url', ta alias ngay trong SQL
     $sql = "SELECT id, name, price, image_url AS img_url, category 
             FROM products 
             ORDER BY id DESC 
@@ -51,7 +58,6 @@ function getFeaturedProducts($conn, $limit = 10) {
     $products = [];
     while ($row = $result->fetch_assoc()) {
         $row['img_url'] = normalizeImageUrl($row['img_url']);
-        // Tạo thêm image_url để đồng bộ
         $row['image_url'] = $row['img_url'];
         $products[] = $row;
     }
@@ -60,7 +66,7 @@ function getFeaturedProducts($conn, $limit = 10) {
 }
 
 /**
- * 3. Lấy chi tiết 1 sản phẩm (Dùng cho trang product.php)
+ * 3. Lấy chi tiết 1 sản phẩm
  */
 function getProductById($conn, $id) {
     $sql = "SELECT * FROM products WHERE id = ?";
@@ -72,49 +78,17 @@ function getProductById($conn, $id) {
     
     if ($product) {
         $product['image_url'] = normalizeImageUrl($product['image_url']);
-        // FIX QUAN TRỌNG: Tạo thêm 'img_url' để view product.php không bị lỗi
         $product['img_url'] = $product['image_url']; 
     }
     return $product;
 }
 
 /**
- * 4. Lấy danh sách ảnh phụ (Gallery) - MỚI THÊM
+ * [QUAN TRỌNG] Đã XÓA hàm getProductImages cũ ở đây để tránh lỗi redeclare
  */
-function getProductImages($conn, $productId, $mainImage) {
-    // Kiểm tra bảng product_images xem có tồn tại không
-    // Nếu bạn chưa tạo bảng này, hàm sẽ trả về mảng chỉ chứa ảnh chính
-    $sql = "SHOW TABLES LIKE 'product_images'";
-    $result = $conn->query($sql);
-    
-    $images = [];
-    
-    if ($result && $result->num_rows > 0) {
-        $sqlImg = "SELECT image_url FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, id ASC";
-        $stmt = $conn->prepare($sqlImg);
-        if ($stmt) {
-            $stmt->bind_param("i", $productId);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_assoc()) {
-                if (!empty($row['image_url'])) {
-                    $images[] = normalizeImageUrl($row['image_url']);
-                }
-            }
-            $stmt->close();
-        }
-    }
-    
-    // Luôn đảm bảo có ít nhất 1 ảnh (ảnh chính) để hiển thị
-    if (empty($images) && !empty($mainImage)) {
-        $images[] = $mainImage;
-    }
-    
-    return $images;
-}
 
 /**
- * 5. Lấy sản phẩm liên quan (Cùng danh mục) - MỚI THÊM
+ * 5. Lấy sản phẩm liên quan
  */
 function getRelatedProducts($conn, $category, $excludeId, $limit = 4) {
     $sql = "SELECT id, name, price, image_url, category 
@@ -130,12 +104,13 @@ function getRelatedProducts($conn, $category, $excludeId, $limit = 4) {
     $products = [];
     while ($row = $result->fetch_assoc()) {
         $row['image_url'] = normalizeImageUrl($row['image_url']);
-        $row['img_url'] = $row['image_url']; // Đồng bộ
+        $row['img_url'] = $row['image_url'];
         $products[] = $row;
     }
     $stmt->close();
     return $products;
 }
+
 /**
  * [ADMIN] Lấy toàn bộ sản phẩm để quản lý
  */
@@ -183,5 +158,76 @@ function addProduct($conn, $name, $category, $price, $mainImg, $extraImgs = []) 
         return $newId;
     }
     return false;
+}
+
+/**
+ * [ADMIN] Cập nhật thông tin sản phẩm (đã thêm hàm updateProduct từ bước trước)
+ */
+function updateProduct($conn, $id, $name, $category, $price, $newImage = null) {
+    if ($newImage) {
+        $sql = "UPDATE products SET name = ?, category = ?, price = ?, image_url = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssisi", $name, $category, $price, $newImage, $id);
+    } else {
+        $sql = "UPDATE products SET name = ?, category = ?, price = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssii", $name, $category, $price, $id);
+    }
+    return $stmt->execute();
+}
+
+/**
+ * [CORE] Lấy danh sách ảnh phụ (Hàm này dùng chung cho cả Admin và Frontend)
+ * - Trả về mảng chứa cả ID và URL
+ */
+function getProductImages($conn, $productId) {
+    // Kiểm tra bảng tồn tại
+    $sql = "SHOW TABLES LIKE 'product_images'";
+    $result = $conn->query($sql);
+    $images = [];
+
+    if ($result && $result->num_rows > 0) {
+        // Lấy cả ID để phục vụ việc xóa ảnh
+        $sqlImg = "SELECT id, image_url FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, id ASC";
+        $stmt = $conn->prepare($sqlImg);
+        if ($stmt) {
+            $stmt->bind_param("i", $productId);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $row['image_url'] = normalizeImageUrl($row['image_url']); 
+                $images[] = $row; // Lưu cả id và url
+            }
+            $stmt->close();
+        }
+    }
+    return $images;
+}
+
+/**
+ * [ADMIN] Xóa 1 ảnh phụ
+ */
+function deleteProductImageById($conn, $imageId) {
+    $sql = "DELETE FROM product_images WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $imageId);
+    return $stmt->execute();
+}
+
+/**
+ * [ADMIN] Thêm loạt ảnh phụ mới cho sản phẩm cũ
+ */
+function addProductExtraImages($conn, $productId, $extraImgs) {
+    if (empty($extraImgs)) return true;
+
+    $sql = "INSERT INTO product_images (product_id, image_url, sort_order) VALUES (?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $order = 1; 
+    foreach ($extraImgs as $img) {
+        $stmt->bind_param("isi", $productId, $img, $order);
+        $stmt->execute();
+        $order++;
+    }
+    return true;
 }
 ?>

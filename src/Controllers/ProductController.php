@@ -24,8 +24,22 @@ class ProductController {
     }
 
     // Hàm xử lý trang Gundam
+    // Hàm xử lý trang Gundam (Đã thêm phân trang)
     public function indexGundam() {
-        $products = getProductsByCategory($this->conn, 'gundam');
+        // 1. Cấu hình phân trang
+        $limit = 10;
+        // Dùng 'page_num' vì 'page' đang dùng để định tuyến (page=gundam)
+        $page = isset($_GET['page_num']) ? (int)$_GET['page_num'] : 1; 
+        if ($page < 1) $page = 1;
+        
+        $offset = ($page - 1) * $limit;
+    
+        // 2. Lấy dữ liệu
+        $products = getProductsByCategory($this->conn, 'gundam', $limit, $offset);
+        $totalProducts = countProductsByCategory($this->conn, 'gundam');
+        $totalPages = ceil($totalProducts / $limit);
+    
+        // 3. Gọi View (đã sửa ở trên)
         require_once __DIR__ . '/../../views/pages/gundam_index.php';
     }
 

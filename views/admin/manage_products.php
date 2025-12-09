@@ -111,6 +111,7 @@ $products = getAllProducts($conn);
             <i class="fas fa-plus"></i>
             Thêm Sản Phẩm Mới
         </a>
+
     </div>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
@@ -164,6 +165,12 @@ $products = getAllProducts($conn);
                         <?= number_format((float)$row['price'], 0, ',', '.'); ?>đ
                     </td>
                     <td>
+                        <a href="edit_product.php?id=<?= (int)$row['id']; ?>" 
+                            class="action-btn" 
+                            style="background: #eab308; color: white; text-decoration: none; display: inline-block;">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+
                         <form action="delete_product.php" method="POST"
                               onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');"
                               style="display:inline;">

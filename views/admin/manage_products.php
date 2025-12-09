@@ -1,8 +1,21 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../src/Models/Product.php';
 
-// Thay thế đoạn SQL cũ bằng hàm này
+// 1. Load file cấu hình và Model
+// Dùng __DIR__ để đường dẫn luôn đúng tuyệt đối
+require_once __DIR__ . '/../../src/Config/db.php';
+require_once __DIR__ . '/../../src/Models/Product.php';
+require_once __DIR__ . '/../../src/Helpers/image_helper.php';
+
+// 2. Kiểm tra quyền Admin (BẮT BUỘC PHẢI CÓ)
+// Nếu chưa đăng nhập HOẶC không phải admin -> Đuổi về trang chủ ngay
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: /DACS/public/index.php');
+    exit; // Dừng code ngay lập tức
+}
+
+// 3. Lấy dữ liệu
+// Biến $conn được tạo ra từ file db.php (đã require ở trên)
 $products = getAllProducts($conn); 
 ?>
 <!DOCTYPE html>
@@ -14,86 +27,53 @@ $products = getAllProducts($conn);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../partials/header.css">
     <style>
-        body { font-family: sans-serif; background-color: #f8fafc; }
+        body { font-family: sans-serif; background-color: #f8fafc; color: #0f172a; }
         .admin-container { max-width: 1200px; margin: 130px auto 30px; padding: 0 20px; }
 
         .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
         }
-        .admin-header h1 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #0f172a;
-        }
+        .admin-header h1 { font-size: 1.6rem; font-weight: 700; color: #0f172a; }
 
-        /* Nút thêm sản phẩm */
+        /* Button Styles */
         .btn-add {
-            background: #10b981;
-            color: #ffffff;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
+            background: #10b981; color: #ffffff; padding: 10px 20px;
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem;
+            transition: background 0.2s;
         }
-        .btn-add i { font-size: 0.9rem; }
         .btn-add:hover { background: #059669; }
 
         /* Table Styles */
         .product-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: hidden;
+            width: 100%; border-collapse: collapse; background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
         }
-        .product-table th,
-        .product-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+        .product-table th, .product-table td {
+            padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0;
         }
         .product-table th {
-            background-color: #f1f5f9;
-            color: #475569;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
+            background-color: #f1f5f9; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.85rem;
         }
         .product-table tr:hover { background-color: #f8fafc; }
 
         .thumb-img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid #ddd;
+            width: 60px; height: 60px; object-fit: cover;
+            border-radius: 4px; border: 1px solid #ddd;
         }
 
         .action-btn {
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            margin-right: 5px;
+            border: none; padding: 6px 12px; border-radius: 4px;
+            cursor: pointer; font-size: 0.9rem; margin-right: 5px; text-decoration: none; color: white;
+            display: inline-block;
         }
-        .btn-delete { background: #ef4444; color: #ffffff; }
+        .btn-edit { background: #eab308; }
+        .btn-edit:hover { background: #ca8a04; }
+        .btn-delete { background: #ef4444; }
         .btn-delete:hover { background: #dc2626; }
 
         .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            color: #ffffff;
-            font-size: 0.9rem;
+            padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #ffffff; font-size: 0.9rem;
         }
         .alert.success { background-color: #10b981; }
         .alert.error   { background-color: #ef4444; }
@@ -105,21 +85,15 @@ $products = getAllProducts($conn);
 <div class="admin-container">
     <div class="admin-header">
         <h1>📦 Quản Lý Sản Phẩm</h1>
-
-        <!-- NÚT THÊM SẢN PHẨM MỚI -->
         <a href="add_product.php" class="btn-add">
-            <i class="fas fa-plus"></i>
-            Thêm Sản Phẩm Mới
+            <i class="fas fa-plus"></i> Thêm Sản Phẩm Mới
         </a>
-
     </div>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
-        <div class="alert <?= htmlspecialchars($_SESSION['flash_type'] ?? 'success', ENT_QUOTES, 'UTF-8'); ?>">
-            <?= htmlspecialchars($_SESSION['flash_message'], ENT_QUOTES, 'UTF-8'); ?>
-            <?php
-            unset($_SESSION['flash_message'], $_SESSION['flash_type']);
-            ?>
+        <div class="alert <?= htmlspecialchars($_SESSION['flash_type'] ?? 'success'); ?>">
+            <?= htmlspecialchars($_SESSION['flash_message']); ?>
+            <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
         </div>
     <?php endif; ?>
 
@@ -127,11 +101,11 @@ $products = getAllProducts($conn);
         <thead>
         <tr>
             <th style="width: 50px;">ID</th>
-            <th style="width: 100px;">Hình ảnh</th>
+            <th style="width: 80px;">Hình ảnh</th>
             <th>Tên sản phẩm</th>
             <th>Danh mục</th>
             <th>Giá</th>
-            <th style="width: 150px;">Hành động</th>
+            <th style="width: 160px;">Hành động</th>
         </tr>
         </thead>
         <tbody>
@@ -141,42 +115,33 @@ $products = getAllProducts($conn);
                     <td>#<?= (int)$row['id']; ?></td>
                     <td>
                         <?php
-                        $imgUrl = !empty($row['image_url'])
-                            ? normalizeImageUrl($row['image_url'])
-                            : 'https://via.placeholder.com/60';
+                        // Xử lý đường dẫn ảnh an toàn
+                        $imgUrl = !empty($row['image_url']) 
+                            ? normalizeImageUrl($row['image_url']) 
+                            : '/DACS/public/assets/img/no-image.jpg';
                         ?>
-                        <img src="<?= htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                             class="thumb-img" alt="Img">
+                        <img src="<?= htmlspecialchars($imgUrl); ?>" class="thumb-img" alt="Product Image">
                     </td>
-                    <td style="font-weight: 500; color: #334155;">
-                        <?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>
+                    <td style="font-weight: 500;">
+                        <?= htmlspecialchars($row['name']); ?>
                     </td>
                     <td>
-                        <span style="
-                            background: #e0f2fe;
-                            color: #0369a1;
-                            padding: 2px 8px;
-                            border-radius: 10px;
-                            font-size: 12px;">
-                            <?= htmlspecialchars($row['category'], ENT_QUOTES, 'UTF-8'); ?>
+                        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600;">
+                            <?= htmlspecialchars(ucfirst($row['category'])); ?>
                         </span>
                     </td>
                     <td style="font-weight: bold; color: #dc2626;">
                         <?= number_format((float)$row['price'], 0, ',', '.'); ?>đ
                     </td>
                     <td>
-                        <a href="edit_product.php?id=<?= (int)$row['id']; ?>" 
-                            class="action-btn" 
-                            style="background: #eab308; color: white; text-decoration: none; display: inline-block;">
-                            <i class="fas fa-edit"></i> Sửa
+                        <a href="edit_product.php?id=<?= (int)$row['id']; ?>" class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i>
                         </a>
 
-                        <form action="delete_product.php" method="POST"
-                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');"
-                              style="display:inline;">
+                        <form action="delete_product.php" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa không?');">
                             <input type="hidden" name="id" value="<?= (int)$row['id']; ?>">
                             <button type="submit" class="action-btn btn-delete">
-                                <i class="fas fa-trash-alt"></i> Xóa
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
                     </td>
@@ -184,13 +149,15 @@ $products = getAllProducts($conn);
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <td colspan="6" style="text-align: center; padding: 30px; color: #64748b;">
-                    Chưa có sản phẩm nào. Hãy thêm mới!
+                <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                    <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                    Chưa có sản phẩm nào.
                 </td>
             </tr>
         <?php endif; ?>
         </tbody>
     </table>
 </div>
+
 </body>
 </html>

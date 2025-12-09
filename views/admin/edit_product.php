@@ -1,36 +1,44 @@
 <?php
 session_start();
 
-// 1. Cấu hình & Kết nối
-if (!defined('PROJECT_ROOT')) {
-    define('PROJECT_ROOT', __DIR__ . '/../..');
-}
-require_once PROJECT_ROOT . '/src/Config/db.php';
-require_once PROJECT_ROOT . '/src/Models/Product.php';
-require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
+// 1. Load Config & Model
+require_once __DIR__ . '/../../src/Config/db.php';
+require_once __DIR__ . '/../../src/Models/Product.php';
 
-// Định nghĩa thư mục upload
+// 2. [BẢO MẬT] Chặn người lạ
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: /DACS/public/index.php');
+    exit;
+}
+
+// 3. Lấy kết nối DB
+$conn = getDatabaseConnection();
+
+// 4. Định nghĩa đường dẫn (Nếu chưa có)
+if (!defined('PROJECT_ROOT')) define('PROJECT_ROOT', dirname(dirname(__DIR__)));
 if (!defined('UPLOAD_DIR')) define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
 if (!defined('DB_IMG_PATH')) define('DB_IMG_PATH', '/DACS/public/assets/img/');
 
-// Hàm upload file (Helper nội bộ)
+// Hàm Helper Upload (Nội bộ)
 function processUpload($fileInput) {
     if (!isset($fileInput['name']) || $fileInput['error'] !== UPLOAD_ERR_OK) return null;
     
-    $ext = pathinfo($fileInput['name'], PATHINFO_EXTENSION);
-    $filename = time() . '_' . uniqid() . '.' . $ext; // Tên file ngẫu nhiên tránh trùng
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $ext = strtolower(pathinfo($fileInput['name'], PATHINFO_EXTENSION));
     
+    if (!in_array($ext, $allowed)) return null;
+
+    $filename = time() . '_' . uniqid() . '.' . $ext;
     if (move_uploaded_file($fileInput['tmp_name'], UPLOAD_DIR . $filename)) {
         return DB_IMG_PATH . $filename;
     }
     return null;
 }
 
-// Lấy ID sản phẩm
+// --- LẤY DỮ LIỆU SẢN PHẨM ---
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $product = getProductById($conn, $id);
 
-// Nếu không tìm thấy sản phẩm -> Về trang quản lý
 if (!$product) {
     header('Location: manage_products.php');
     exit;
@@ -39,44 +47,39 @@ if (!$product) {
 $error = '';
 $success = '';
 
-// ==========================================
-// XỬ LÝ POST (Cả xóa ảnh và cập nhật)
-// ==========================================
+// --- XỬ LÝ SUBMIT FORM ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // --- TRƯỜNG HỢP 1: XÓA ẢNH PHỤ ---
+    // A. Xử lý Xóa ảnh phụ
     if (isset($_POST['delete_image_id'])) {
         $imgId = (int)$_POST['delete_image_id'];
-        
-        // Gọi hàm xóa trong Model
         if (deleteProductImageById($conn, $imgId)) {
-            // Redirect lại chính trang này để refresh và tránh form resubmission
+            // Redirect để refresh trang (PRG Pattern)
             header("Location: edit_product.php?id=$id&msg=deleted");
             exit;
         } else {
-            $error = "Không thể xóa ảnh. Vui lòng thử lại.";
+            $error = "Lỗi: Không thể xóa ảnh.";
         }
-    }
-    
-    // --- TRƯỜNG HỢP 2: CẬP NHẬT SẢN PHẨM (Nút Lưu) ---
+    } 
+    // B. Xử lý Cập nhật thông tin
     else {
-        $name = trim($_POST['name'] ?? '');
+        $name     = trim($_POST['name'] ?? '');
         $category = $_POST['category'] ?? 'anime';
-        $price = (int)preg_replace('/[^\d]/', '', $_POST['price']); // Chỉ lấy số
+        $price    = (int)preg_replace('/[^\d]/', '', $_POST['price']); // Chỉ lấy số
 
         if ($name === '') {
             $error = "Tên sản phẩm không được để trống.";
         } else {
-            // 1. Xử lý Ảnh đại diện (Main Image)
+            // 1. Upload ảnh đại diện mới (nếu có)
             $mainImgPath = null;
             if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
                 $mainImgPath = processUpload($_FILES['main_image']);
             }
 
-            // Gọi Model cập nhật thông tin chính
+            // 2. Cập nhật bảng products
             if (updateProduct($conn, $id, $name, $category, $price, $mainImgPath)) {
                 
-                // 2. Xử lý thêm ảnh phụ (Extra Images)
+                // 3. Upload thêm ảnh phụ (nếu có)
                 if (isset($_FILES['new_extra_images'])) {
                     $newExtraUrls = [];
                     $count = count($_FILES['new_extra_images']['name']);
@@ -89,33 +92,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'error'    => $_FILES['new_extra_images']['error'][$i],
                             'size'     => $_FILES['new_extra_images']['size'][$i]
                         ];
-                        
                         $url = processUpload($singleFile);
-                        if ($url) {
-                            $newExtraUrls[] = $url;
-                        }
+                        if ($url) $newExtraUrls[] = $url;
                     }
                     
-                    // Gọi Model thêm ảnh phụ
-                    addProductExtraImages($conn, $id, $newExtraUrls);
+                    if (!empty($newExtraUrls)) {
+                        addProductExtraImages($conn, $id, $newExtraUrls);
+                    }
                 }
 
-                $success = "Cập nhật sản phẩm thành công!";
-                // Refresh lại dữ liệu mới nhất từ DB
-                $product = getProductById($conn, $id);
+                $success = "Cập nhật thành công!";
+                $product = getProductById($conn, $id); // Lấy lại dữ liệu mới nhất
             } else {
-                $error = "Lỗi SQL: " . $conn->error;
+                $error = "Lỗi SQL: Không thể cập nhật sản phẩm.";
             }
         }
     }
 }
 
-// Kiểm tra thông báo từ URL (sau khi redirect xóa ảnh)
 if (isset($_GET['msg']) && $_GET['msg'] == 'deleted') {
     $success = "Đã xóa ảnh thành công!";
 }
 
-// Lấy danh sách ảnh phụ (để hiển thị)
+// Lấy danh sách ảnh phụ
 $extraImages = getProductImages($conn, $id);
 ?>
 
@@ -123,132 +122,112 @@ $extraImages = getProductImages($conn, $id);
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Sửa: <?= htmlspecialchars($product['name']) ?></title>
+    <title>Sửa sản phẩm - Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../layouts/header.css">
     <style>
-        body { font-family: system-ui, sans-serif; background: #f3f4f6; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; }
+        body { font-family: sans-serif; background: #f8fafc; color: #0f172a; padding-bottom: 50px; }
+        .edit-container { max-width: 900px; margin: 120px auto 0; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-top: 0; color: #1e293b; }
         
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
-        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
-        input:focus, select:focus { outline: 2px solid #2563eb; border-color: transparent; }
-
-        /* Gallery Styles */
-        .gallery-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
-        .gallery-item { position: relative; width: 100px; height: 100px; border-radius: 6px; overflow: hidden; border: 1px solid #e5e7eb; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        
+        /* Gallery */
+        .gallery-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .gallery-item { position: relative; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* Nút xóa ảnh (Tuyệt chiêu: Nút submit nhưng style thành icon) */
         .btn-delete-img {
-            position: absolute; top: 4px; right: 4px;
-            background: rgba(239, 68, 68, 0.9); color: white;
-            border: none; width: 24px; height: 24px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 12px; transition: 0.2s;
+            position: absolute; top: 5px; right: 5px;
+            background: rgba(220, 38, 38, 0.9); color: white; border: none;
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .btn-delete-img:hover { background: #dc2626; transform: scale(1.1); }
+        .btn-delete-img:hover { transform: scale(1.1); background: #dc2626; }
 
-        .btn-save { background: #2563eb; color: #fff; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-save { background: #2563eb; color: white; padding: 12px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn-save:hover { background: #1d4ed8; }
-        .btn-back { display: inline-block; margin-left: 15px; color: #6b7280; text-decoration: none; }
-        .btn-back:hover { color: #111827; }
+        .btn-back { margin-left: 15px; text-decoration: none; color: #64748b; font-weight: 500; }
+        .btn-back:hover { color: #0f172a; }
 
-        .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; }
-        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        
-        .preview-main { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-error { background: #fee2e2; color: #991b1b; }
+        .preview-main { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; }
     </style>
 </head>
 <body>
+    <?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<div class="container">
-    <h2><i class="fas fa-edit"></i> Chỉnh sửa sản phẩm</h2>
-    
-    <?php if ($success): ?>
-        <div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= $success ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= $error ?></div>
-    <?php endif; ?>
-
-    <form method="post" enctype="multipart/form-data">
+    <div class="edit-container">
+        <h2><i class="fas fa-edit"></i> Chỉnh sửa: <?= htmlspecialchars($product['name']) ?></h2>
         
-        <div class="form-group">
-            <label>Tên sản phẩm</label>
-            <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>" required>
-        </div>
+        <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
+        <?php if ($error): ?><div class="alert alert-error"><?= $error ?></div><?php endif; ?>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <form method="post" enctype="multipart/form-data">
             <div class="form-group">
-                <label>Danh mục</label>
-                <select name="category">
-                    <option value="anime" <?= $product['category'] == 'anime' ? 'selected' : '' ?>>Anime Figure</option>
-                    <option value="gundam" <?= $product['category'] == 'gundam' ? 'selected' : '' ?>>Gundam</option>
-                    <option value="marvel" <?= $product['category'] == 'marvel' ? 'selected' : '' ?>>Marvel</option>
-                </select>
+                <label>Tên sản phẩm</label>
+                <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>" required>
             </div>
 
-            <div class="form-group">
-                <label>Giá (VNĐ)</label>
-                <input type="text" name="price" value="<?= number_format($product['price'], 0, '', '') ?>" required>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Ảnh đại diện (Main Image)</label>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <img src="<?= htmlspecialchars($product['image_url']) ?>" class="preview-main">
-                <div>
-                    <input type="file" name="main_image" accept="image/*">
-                    <div style="font-size: 0.85em; color: #666; margin-top: 4px;">Chỉ chọn nếu muốn thay ảnh mới.</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Danh mục</label>
+                    <select name="category">
+                        <option value="anime" <?= $product['category'] == 'anime' ? 'selected' : '' ?>>Anime Figure</option>
+                        <option value="gundam" <?= $product['category'] == 'gundam' ? 'selected' : '' ?>>Gundam</option>
+                        <option value="marvel" <?= $product['category'] == 'marvel' ? 'selected' : '' ?>>Marvel</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Giá (VNĐ)</label>
+                    <input type="text" name="price" value="<?= number_format($product['price'], 0, '', '') ?>" required>
                 </div>
             </div>
-        </div>
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px dashed #e5e7eb;">
-
-        <div class="form-group">
-            <label>Bộ sưu tập ảnh phụ (Gallery)</label>
-            
-            <div class="gallery-grid">
-                <?php if (!empty($extraImages)): ?>
-                    <?php foreach ($extraImages as $img): ?>
-                        <div class="gallery-item">
-                            <img src="<?= htmlspecialchars($img['image_url']) ?>">
-                            
-                            <button type="submit" 
-                                    name="delete_image_id" 
-                                    value="<?= $img['id'] ?>"
-                                    class="btn-delete-img"
-                                    title="Xóa ảnh này"
-                                    onclick="return confirm('Bạn chắc chắn muốn xóa ảnh này?');">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p style="font-size: 0.9em; color: #9ca3af; font-style: italic;">Chưa có ảnh phụ nào.</p>
-                <?php endif; ?>
+            <div class="form-group">
+                <label>Ảnh đại diện (Main Image)</label>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <img src="<?= htmlspecialchars($product['image_url']) ?>" class="preview-main">
+                    <div>
+                        <input type="file" name="main_image" accept="image/*">
+                        <p style="font-size: 0.9em; color: #64748b; margin-top: 5px;">Chọn ảnh mới để thay thế (để trống nếu không đổi).</p>
+                    </div>
+                </div>
             </div>
 
-            <div style="margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 6px; border: 1px dashed #d1d5db;">
-                <label style="margin-bottom: 5px; color: #2563eb;"><i class="fas fa-plus"></i> Thêm ảnh phụ mới (Chọn nhiều)</label>
-                <input type="file" name="new_extra_images[]" multiple accept="image/*">
+            <hr style="margin: 30px 0; border: 0; border-top: 1px dashed #cbd5e1;">
+
+            <div class="form-group">
+                <label>Thư viện ảnh phụ (Gallery)</label>
+                <div class="gallery-grid">
+                    <?php if (!empty($extraImages)): ?>
+                        <?php foreach ($extraImages as $img): ?>
+                            <div class="gallery-item">
+                                <img src="<?= htmlspecialchars($img['image_url']) ?>">
+                                <button type="submit" name="delete_image_id" value="<?= $img['id'] ?>" class="btn-delete-img" title="Xóa ảnh này" onclick="return confirm('Xóa ảnh này?');">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color: #64748b; font-style: italic;">Chưa có ảnh phụ.</p>
+                    <?php endif; ?>
+                </div>
+
+                <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 6px;">
+                    <label style="margin-bottom: 8px;"><i class="fas fa-plus-circle"></i> Thêm ảnh phụ mới</label>
+                    <input type="file" name="new_extra_images[]" multiple accept="image/*">
+                </div>
             </div>
-        </div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <button type="submit" class="btn-save">
-                <i class="fas fa-save"></i> Lưu Thay Đổi
-            </button>
-            <a href="manage_products.php" class="btn-back">Hủy & Quay lại</a>
-        </div>
-
-    </form>
-</div>
-
+            <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+                <a href="manage_products.php" class="btn-back">Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

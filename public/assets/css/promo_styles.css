@@ -8,7 +8,7 @@ body {
     background: #fafafa;
     color: #1a1a1a;
     line-height: 1.6;
-    padding-top: 80px;
+    padding-top: 0px;
 }
 
 .hero-banner {
@@ -23,7 +23,6 @@ body {
 .hero-banner::before {
     content: '';
     position: absolute;
-    top: -50%;
     right: -10%;
     width: 400px;
     height: 400px;

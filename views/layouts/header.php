@@ -10,7 +10,12 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
 
 <header class="header">
     <nav class="nav-container">
+
         <link rel="stylesheet" href="/DACS/views/layouts/header.css">
+
+        <link rel="stylesheet" href="/DACS/views/layouts/footer.css">
+
+        <link rel="stylesheet" href="/DACS/public/assets/css/cart.css">
 
         <ul class="nav-menu">
             <?php if ($isLoggedIn && $userRole === 'admin'): ?>
@@ -42,7 +47,7 @@ $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
                 </button>
             </form>
 
-            <div class="cart-icon" onclick="toggleCart()">
+            <div class="cart-icon" onclick="toggleCart();" style="cursor: pointer;">
                 <i class="fas fa-shopping-cart"></i>
                 <span id="cartCount" class="cart-count">0</span>
             </div>

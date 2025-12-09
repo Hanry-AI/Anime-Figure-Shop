@@ -4,23 +4,50 @@
     padding: 0;
     box-sizing: border-box;
 }
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #fafafa;
     color: #1a1a1a;
     line-height: 1.6;
-    padding-top: 90px; /* chừa chỗ cho header fixed */
+    padding-top: 0px;
 }
+
 
 /* =========================
    HERO / BANNER
 ========================= */
 .contact-hero {
     background: linear-gradient(135deg, #e53e3e 0%, #9c1a1a 100%);
-    color: #fff;
-    padding: 72px 20px 80px;
+    padding: 128px 20px;
     text-align: center;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+.contact-banner::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.contact-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -5%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.contact-banner-content {
+    position: relative;
+    z-index: 1;
 }
 
 .contact-hero-inner {

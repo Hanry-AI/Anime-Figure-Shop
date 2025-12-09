@@ -44,8 +44,8 @@ $name = $category = $priceRaw = '';
 // 2. Xử lý Form Submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name'] ?? '');
-    $category = trim($_POST['category'] ?? '');
-    $priceRaw = trim($_POST['price'] ?? '');
+    $category = trim($_POST['category'] ?? 'anime');
+    $priceRaw = trim($_POST['price'] ?? '0');
     
     // Validate cơ bản
     if ($name === '')     $errors[] = 'Tên sản phẩm là bắt buộc.';

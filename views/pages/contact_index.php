@@ -147,5 +147,6 @@
     </div>
 
     <script src="/DACS/public/assets/js/contact.js"></script>
+    <?php include __DIR__ . '/../layouts/footer.php'; ?>
 </body>
 </html>

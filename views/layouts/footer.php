@@ -80,7 +80,7 @@
         <h3>Giỏ hàng</h3>
         <button
             class="cart-close"
-            id="cartCloseBtn"
+            id="cartCloseBtn"   
             aria-label="Đóng giỏ hàng"
             type="button"
         >

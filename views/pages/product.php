@@ -227,5 +227,6 @@
 
 <script src="/DACS/public/assets/js/scripts.js"></script>
 <script src="/DACS/public/assets/js/product.js"></script>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>
 </body>
 </html>

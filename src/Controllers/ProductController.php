@@ -1,78 +1,94 @@
 <?php
 namespace DACS\Controllers;
 
-// Nhúng file cấu hình và Model Product
+// 1. Nhúng các file cần thiết
+// Dùng __DIR__ để đường dẫn luôn đúng dù gọi từ đâu
 require_once __DIR__ . '/../Config/db.php';
 require_once __DIR__ . '/../Models/Product.php';
 
 class ProductController {
     private $conn;
 
-    public function __construct() {
-        // Lấy biến kết nối $conn từ global (được tạo trong db.php)
-        global $conn;
-        $this->conn = $conn;
+    /**
+     * HÀM KHỞI TẠO (Constructor)
+     * Nhận kết nối DB từ bên ngoài (Dependency Injection)
+     * Giúp loại bỏ lỗi dùng "global" và dễ giải thích với giáo viên.
+     */
+    public function __construct($db) {
+        $this->conn = $db;
     }
 
-    // Hàm xử lý trang Anime
+    /**
+     * TRANG ANIME
+     * Hiển thị danh sách sản phẩm thuộc danh mục Anime
+     */
     public function indexAnime() {
-        // 1. Lấy dữ liệu từ Model
+        // Gọi hàm từ Model (Product.php), truyền kết nối $this->conn vào
         $products = getProductsByCategory($this->conn, 'anime');
 
-        // 2. Gọi View hiển thị (biến $products sẽ tự động truyền sang view)
+        // Gọi View hiển thị
         require_once __DIR__ . '/../../views/pages/anime_index.php';
     }
 
-    // Hàm xử lý trang Gundam
-    // Hàm xử lý trang Gundam (Đã thêm phân trang)
+    /**
+     * TRANG GUNDAM (Có phân trang)
+     * Logic phân trang được tính toán tại đây để View chỉ việc hiển thị
+     */
     public function indexGundam() {
-        // 1. Cấu hình phân trang
+        // Cấu hình số lượng sản phẩm mỗi trang
         $limit = 10;
-        // Dùng 'page_num' vì 'page' đang dùng để định tuyến (page=gundam)
+        
+        // Lấy trang hiện tại từ URL, ép kiểu số nguyên (int) để bảo mật
         $page = isset($_GET['page_num']) ? (int)$_GET['page_num'] : 1; 
         if ($page < 1) $page = 1;
         
+        // Tính vị trí bắt đầu lấy dữ liệu trong DB (Offset)
         $offset = ($page - 1) * $limit;
     
-        // 2. Lấy dữ liệu
+        // Lấy danh sách sản phẩm và tổng số lượng từ Model
         $products = getProductsByCategory($this->conn, 'gundam', $limit, $offset);
         $totalProducts = countProductsByCategory($this->conn, 'gundam');
+        
+        // Tính tổng số trang (làm tròn lên)
         $totalPages = ceil($totalProducts / $limit);
     
-        // 3. Gọi View (đã sửa ở trên)
+        // Gọi View
         require_once __DIR__ . '/../../views/pages/gundam_index.php';
     }
 
-    // Hàm xử lý trang Marvel
+    /**
+     * TRANG MARVEL
+     */
     public function indexMarvel() {
         $products = getProductsByCategory($this->conn, 'marvel');
         require_once __DIR__ . '/../../views/pages/marvel_index.php';
     }
 
+    /**
+     * TRANG CHI TIẾT SẢN PHẨM
+     */
     public function detail() {
-        // 1. Lấy ID từ URL, ép kiểu int để bảo mật
+        // Lấy ID từ URL và ép kiểu int để chống hack SQL Injection
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-        // 2. Lấy thông tin sản phẩm chính
+        // Lấy thông tin sản phẩm
         $product = getProductById($this->conn, $id);
 
-        // Nếu không tìm thấy sản phẩm, đá về trang chủ
+        // Nếu không tìm thấy sản phẩm, quay về trang chủ
         if (!$product) {
             header('Location: /DACS/public/index.php');
             exit;
         }
 
-        // 3. Chuẩn bị các dữ liệu phụ trợ cho View
-        // - Lấy danh sách ảnh gallery
+        // Lấy dữ liệu phụ trợ (Ảnh gallery, Sản phẩm liên quan)
         $images = getProductImages($this->conn, $id);
-        
-        // - Lấy sản phẩm liên quan (cùng category, trừ sản phẩm hiện tại)
         $relatedProducts = getRelatedProducts($this->conn, $product['category'], $id);
 
-        // - ĐỊNH NGHĨA BIẾN $firstImg MÀ VIEW ĐANG CẦN CHO JS
+        // Biến hỗ trợ JS đổi ảnh
         $firstImg = $product['image_url']; 
 
-        // 4. Gọi View hiển thị
+        // Gọi View
         require_once __DIR__ . '/../../views/pages/product.php';
     }
 }
+?>

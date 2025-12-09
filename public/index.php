@@ -5,11 +5,13 @@ session_start();
 define('PROJECT_ROOT', dirname(__DIR__));
 
 // --- 1. LOAD FILE CẤU HÌNH & CONTROLLER ---
+// Khi require file db.php này, biến $conn sẽ được tạo ra và có thể dùng ngay bên dưới
 require_once PROJECT_ROOT . '/src/Config/db.php';
+
 require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
 require_once PROJECT_ROOT . '/src/Helpers/format_helper.php';
 
-// Load các Controller thủ công (Sau này dùng Composer Autoload sẽ bỏ đoạn này)
+// Load các Controller thủ công
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
 require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';
 require_once PROJECT_ROOT . '/src/Controllers/PageController.php';
@@ -32,7 +34,9 @@ switch ($page) {
     case 'auth':
     case 'login':
     case 'register':
-        $controller = new AuthController();
+        // [CẬP NHẬT] Truyền $conn vào đây
+        $controller = new AuthController($conn); 
+        
         if ($action === 'logout') {
             $controller->logout();
         } else {
@@ -40,53 +44,63 @@ switch ($page) {
         }
         break;
 
-    // --- CÁC TRANG SẢN PHẨM (Đã có Controller) ---
+    // --- CÁC TRANG SẢN PHẨM (Đã sửa Controller) ---
     case 'anime':
-        $controller = new ProductController();
+        // [QUAN TRỌNG] Truyền $conn vào đây vì ProductController đã sửa __construct($db)
+        $controller = new ProductController($conn);
         $controller->indexAnime();
         break;
         
     case 'gundam':
-        $controller = new ProductController();
+        // [QUAN TRỌNG] Truyền $conn vào
+        $controller = new ProductController($conn);
         $controller->indexGundam();
         break;
         
     case 'marvel':
-        $controller = new ProductController();
+        // [QUAN TRỌNG] Truyền $conn vào
+        $controller = new ProductController($conn);
         $controller->indexMarvel();
         break;
 
-    // --- CÁC TRANG KHÁC (Bây giờ dùng PageController) ---
+    // --- CÁC TRANG KHÁC ---
     
     case 'product':
-        $controller = new ProductController();
-        $controller->detail(); // Gọi hàm detail vừa tạo
+        // [QUAN TRỌNG] Truyền $conn vào (Trang chi tiết cũng dùng ProductController)
+        $controller = new ProductController($conn);
+        $controller->detail(); 
         break;
 
     case 'contact':
-        $controller = new PageController();
+        // [CẬP NHẬT] Truyền $conn vào
+        $controller = new PageController($conn);
         $controller->contact();
         break;
 
     case 'promo':
-        $controller = new PageController();
+        // [CẬP NHẬT] Truyền $conn vào
+        $controller = new PageController($conn);
         $controller->promo();
         break;
         
     case 'profile':
-        $controller = new PageController();
+        // [CẬP NHẬT] Truyền $conn vào
+        $controller = new PageController($conn);
         $controller->profile();
         break;
 
     // --- TRANG CHỦ ---
     case 'home':
     default:
-        $controller = new HomeController();
+        // [CẬP NHẬT] Truyền thêm $conn vào đây
+        // Vì HomeController vừa được sửa hàm __construct($db)
+        $controller = new HomeController($conn); 
         $controller->index();
         break;
         
     case 'cart':
-        $controller = new CartController();
+        // [CẬP NHẬT] Truyền $conn vào CartController
+        $controller = new CartController($conn);
         $controller->index();
         break;
 }

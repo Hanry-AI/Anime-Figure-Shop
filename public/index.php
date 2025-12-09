@@ -13,7 +13,8 @@ require_once PROJECT_ROOT . '/src/Helpers/format_helper.php';
 require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
 require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';
 require_once PROJECT_ROOT . '/src/Controllers/PageController.php';
-require_once PROJECT_ROOT . '/src/Controllers/ProductController.php'; // Đảm bảo bạn đã có file này
+require_once PROJECT_ROOT . '/src/Controllers/ProductController.php';
+require_once PROJECT_ROOT . '/src/Controllers/CartController.php';
 
 // --- 2. KHAI BÁO SỬ DỤNG NAMESPACE ---
 use DACS\Controllers\AuthController;

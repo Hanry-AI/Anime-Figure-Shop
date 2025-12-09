@@ -3,7 +3,7 @@ namespace DACS\Controllers;
 
 require_once __DIR__ . '/../Config/db.php';
 require_once __DIR__ . '/../Helpers/image_helper.php';
-require_once __DIR__ . '/../Helpers/format_helper.php'; // Nạp helper định dạng tiền
+require_once __DIR__ . '/../Helpers/format_helper.php';
 
 class CartController {
     private $conn;
@@ -72,7 +72,8 @@ class CartController {
             }
         }
 
-        // Gọi View hiển thị (View chỉ việc hiển thị $finalCart và $totalAmount)
+        // Gọi View hiển thị
         require_once __DIR__ . '/../../views/pages/cart.php';
     }
 }
+// ĐÃ XÓA DẤU } THỪA Ở ĐÂY

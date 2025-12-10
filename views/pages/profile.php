@@ -1,37 +1,50 @@
 <?php
+// views/pages/profile.php
 session_start();
+
+// 1. Load file cấu hình và Model
+require_once __DIR__ . '/../../src/Config/db.php';
 require_once __DIR__ . '/../../src/Models/User.php';
 
+// 2. Kiểm tra đăng nhập (Auth Guard)
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /DACS/views/pages/auth_index.php?action=login');
+    header('Location: /DACS/public/index.php?page=auth&action=login');
     exit;
 }
+
+// 3. [QUAN TRỌNG] Khởi tạo kết nối Database
+// File này cần biến $conn để truyền vào các hàm bên dưới
+$conn = getDatabaseConnection();
 
 $userId = $_SESSION['user_id'];
 $successMsg = '';
 $errorMsg = '';
 
-// Lấy thông tin user
-$currentUser = getUserById($conn, $userId);
-
-// Xử lý cập nhật
+// 4. Xử lý Logic (Cập nhật thông tin)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $res = updateUser(
-        $conn, 
-        $userId, 
-        $_POST['name'], 
-        $_POST['email'], 
-        !empty($_POST['new_password']) ? $_POST['new_password'] : null
-    );
+    $name = $_POST['name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $newPass = !empty($_POST['new_password']) ? $_POST['new_password'] : null;
+    $confirmPass = !empty($_POST['confirm_new_password']) ? $_POST['confirm_new_password'] : null;
 
-    if ($res === true) {
-        $successMsg = 'Cập nhật thành công.';
-        $_SESSION['user_name'] = $_POST['name']; // Update session
-        $currentUser = getUserById($conn, $userId); // Reload data
+    // Validate cơ bản
+    if ($newPass && $newPass !== $confirmPass) {
+        $errorMsg = 'Mật khẩu xác nhận không khớp.';
     } else {
-        $errorMsg = $res;
+        // Gọi Model cập nhật
+        $res = updateUser($conn, $userId, $name, $email, $newPass);
+
+        if ($res === true) {
+            $successMsg = 'Cập nhật thành công.';
+            $_SESSION['user_name'] = $name; // Cập nhật luôn tên trong session
+        } else {
+            $errorMsg = $res; // Lỗi từ Model trả về (VD: Email trùng)
+        }
     }
 }
+
+// 5. Lấy thông tin user mới nhất để hiển thị
+$currentUser = getUserById($conn, $userId);
 ?>
 <!DOCTYPE html>
 <html lang="vi">

@@ -64,7 +64,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
                     <!-- Dùng button thay vì a href="#" -->
                     <button type="button" class="series-card" onclick="filterBySeries('avengers')">
                         <div class="series-image avengers">
-                            <img src="/DACS/public/assets/img/marvel-logo.png" alt="Avengers">
+                            <img src="/DACS/public/assets/img/avengers.webp" alt="Avengers">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Avengers</div>
@@ -73,7 +73,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
 
                     <button type="button" class="series-card" onclick="filterBySeries('iron-man')">
                         <div class="series-image iron-man">
-                            <img src="/DACS/public/assets/img/hot-toys-iron-man-mark-50.png" alt="Iron Man">
+                            <img src="/DACS/public/assets/img/iron-man.png" alt="Iron Man">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Iron Man</div>
@@ -82,25 +82,16 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
 
                     <button type="button" class="series-card" onclick="filterBySeries('spider-man')">
                         <div class="series-image spider-man">
-                            <img src="/DACS/public/assets/img/spider-man-advanced-suit.png" alt="Spider-Man">
+                            <img src="/DACS/public/assets/img/spider-man.png" alt="Spider-Man">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Spider-Man</div>
                         </div>
                     </button>
 
-                    <button type="button" class="series-card" onclick="filterBySeries('x-men')">
-                        <div class="series-image x-men">
-                            <img src="/DACS/public/assets/img/marvel-logo.png" alt="X-Men">
-                        </div>
-                        <div class="series-info">
-                            <div class="series-name">X-Men</div>
-                        </div>
-                    </button>
-
                     <button type="button" class="series-card" onclick="filterBySeries('guardians')">
                         <div class="series-image guardians">
-                            <img src="/DACS/public/assets/img/marvel-logo.png" alt="Guardians of the Galaxy">
+                            <img src="/DACS/public/assets/img/guardians-of-the-galaxy.png" alt="Guardians of the Galaxy">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Guardians of the Galaxy</div>
@@ -109,7 +100,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
 
                     <button type="button" class="series-card" onclick="filterBySeries('black-panther')">
                         <div class="series-image black-panther">
-                            <img src="/DACS/public/assets/img/marvel-logo.png" alt="Black Panther">
+                            <img src="/DACS/public/assets/img/black-panther.png" alt="Black Panther">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Black Panther</div>

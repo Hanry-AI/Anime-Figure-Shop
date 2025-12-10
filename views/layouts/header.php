@@ -7,16 +7,11 @@ $isLoggedIn = isset($_SESSION['user_id']);
 $userName   = $isLoggedIn ? ($_SESSION['user_name'] ?? 'Tài khoản') : null;
 $userRole   = $isLoggedIn ? ($_SESSION['user_role'] ?? 'customer') : 'customer';
 ?>
-
+<link rel="stylesheet" href="/DACS/views/layouts/header.css">
+<link rel="stylesheet" href="/DACS/views/layouts/footer.css">
+<link rel="stylesheet" href="/DACS/public/assets/css/cart.css">
 <header class="header">
     <nav class="nav-container">
-
-        <link rel="stylesheet" href="/DACS/views/layouts/header.css">
-
-        <link rel="stylesheet" href="/DACS/views/layouts/footer.css">
-
-        <link rel="stylesheet" href="/DACS/public/assets/css/cart.css">
-
         <ul class="nav-menu">
             <?php if ($isLoggedIn && $userRole === 'admin'): ?>
                 <li>

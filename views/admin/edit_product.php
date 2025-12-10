@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 }
 
 // 3. Lấy kết nối DB
-$conn = getDatabaseConnection();
+$products = getAllProducts($conn); 
 
 // 4. Định nghĩa đường dẫn (Nếu chưa có)
 if (!defined('PROJECT_ROOT')) define('PROJECT_ROOT', dirname(dirname(__DIR__)));

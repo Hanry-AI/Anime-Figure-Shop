@@ -32,7 +32,7 @@
         <div class="cart-table-wrap">
             <?php if (empty($finalCart)): ?>
                 <div class="cart-empty">
-                    Giỏ hàng trống. <a href="/DACS/index.php" class="btn-back">
+                    Giỏ hàng trống. <a href="/DACS/views/pages/index.php" class="btn-back">
                         <i class="fas fa-arrow-left"></i> Quay lại mua sắm
                     </a>
                 </div>
@@ -111,7 +111,7 @@
             </div>
 
             <div class="cart-actions">
-                <a href="/DACS/index.php" class="btn-back">
+                <a href="/DACS/public/index.php" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
                 </a>
 

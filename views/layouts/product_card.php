@@ -20,7 +20,7 @@ if (!function_exists('normalizeImageUrl')) {
         <div class="product-image">
             <img src="<?= htmlspecialchars(normalizeImageUrl($p['image_url'] ?? null)) ?>"
                  alt="<?= htmlspecialchars($p['name']) ?>"
-                 style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                 style="width: 100%; height: 100%; object-fit: cover;">
         </div>
     </a>
 

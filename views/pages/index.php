@@ -90,7 +90,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             <div class="category-grid">
                 <a class="category-card" href="index.php?page=anime">
                     <div class="category-image">
-                        <img src="assets/img/anime(2).webp" alt="Anime">
+                        <img src="assets/img/anime-banner.jpg" alt="Anime">
                     </div>
                     <div class="category-content">
                         <h3 class="category-title">Figure Anime</h3>
@@ -106,7 +106,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 <a class="category-card" href="index.php?page=gundam">
                     <div class="category-image">
-                        <img src="assets/img/gundam.jpg" alt="Gundam">
+                        <img src="assets/img/gundam-banner.jpg" alt="Gundam">
                     </div>
                     <div class="category-content">
                         <h3 class="category-title">Gundam Model Kit</h3>
@@ -122,7 +122,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 <a class="category-card" href="index.php?page=marvel">
                     <div class="category-image">
-                        <img src="assets/img/marvel.jpg" alt="Marvel">
+                        <img src="assets/img/marvel-banner.jpg" alt="Marvel">
                     </div>
                     <div class="category-content">
                         <h3 class="category-title">Marvel Figures</h3>

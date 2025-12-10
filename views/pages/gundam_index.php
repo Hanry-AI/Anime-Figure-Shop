@@ -63,27 +63,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
     <main class="main-content">
         <div class="hero-banner">
-            <div class="hero-content">
-                <h1 class="hero-title">Gundam Model Collection</h1>
-                <p class="hero-subtitle">
-                    Khám phá thế giới mô hình Gundam với hàng trăm kit từ các series Mobile Suit Gundam nổi tiếng
-                </p>
-
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">300+</span>
-                        <span class="hero-stat-label">Gundam Kits</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">20+</span>
-                        <span class="hero-stat-label">Gundam Series</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">100%</span>
-                        <span class="hero-stat-label">Bandai Chính hãng</span>
-                    </div>
-                </div>
-            </div>
+        <div class="hero-banner gundam-bg">
         </div>
 
         <section class="popular-series">

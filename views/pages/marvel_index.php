@@ -26,28 +26,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
     <main class="main-content">
         <!-- HERO -->
         <div class="hero-banner">
-            <div class="hero-content">
-                <h1 class="hero-title">Marvel Figure Collection</h1>
-                <p class="hero-subtitle">
-                    Khám phá mô hình Marvel chính hãng từ Hot Toys, Sideshow, Kotobukiya
-                    và nhiều thương hiệu khác
-                </p>
-
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">200+</span>
-                        <span class="hero-stat-label">Marvel Figures</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">30+</span>
-                        <span class="hero-stat-label">Nhân vật</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">100%</span>
-                        <span class="hero-stat-label">Chính hãng</span>
-                    </div>
-                </div>
-            </div>
+        <div class="hero-banner marvel-bg">
         </div>
 
         <!-- DÒNG SẢN PHẨM NỔI BẬT -->
@@ -91,7 +70,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
 
                     <button type="button" class="series-card" onclick="filterBySeries('guardians')">
                         <div class="series-image guardians">
-                            <img src="/DACS/public/assets/img/guardians-of-the-galaxy.png" alt="Guardians of the Galaxy">
+                            <img src="/DACS/public/assets/img/guardians-of-the-galaxy.jpg" alt="Guardians of the Galaxy">
                         </div>
                         <div class="series-info">
                             <div class="series-name">Guardians of the Galaxy</div>

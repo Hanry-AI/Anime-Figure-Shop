@@ -26,27 +26,7 @@ $isLoggedIn = isset($_SESSION['user_id']); // Kiểm tra lại biến này cho c
     <main class="main-content">
         <!-- Hero banner -->
         <div class="hero-banner">
-            <div class="hero-content">
-                <h1 class="hero-title">Anime Figure Collection</h1>
-                <p class="hero-subtitle">
-                    Khám phá thế giới figure anime với hàng ngàn mô hình từ các series anime nổi tiếng nhất
-                </p>
-
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">500+</span>
-                        <span class="hero-stat-label">Figure Anime</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">50+</span>
-                        <span class="hero-stat-label">Anime Series</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="hero-stat-number">100%</span>
-                        <span class="hero-stat-label">Chính hãng</span>
-                    </div>
-                </div>
-            </div>
+        <div class="hero-banner anime-bg">
         </div>
 
         <!-- Series nổi tiếng -->

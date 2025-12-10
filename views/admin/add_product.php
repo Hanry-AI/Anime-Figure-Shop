@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 }
 
 // 3. [QUAN TRỌNG] Lấy kết nối Database
-$conn = getDatabaseConnection();
+$products = getAllProducts($conn); 
 
 // 4. Định nghĩa các hằng số đường dẫn (Nếu chưa có)
 if (!defined('PROJECT_ROOT')) {

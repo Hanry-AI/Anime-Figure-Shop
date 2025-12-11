@@ -12,7 +12,8 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
     <!-- CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="/DACS/public/assets/css/styles.css">
+    <link rel="stylesheet" href="/DACS/public/assets/css/home.css">
     <link rel="stylesheet" href="/DACS/views/layouts/header.css">
 </head>
 <body data-logged-in="<?= $isLoggedIn ? '1' : '0'; ?>">

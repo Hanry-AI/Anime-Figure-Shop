@@ -1,10 +1,12 @@
 <?php
 session_start();
 
-// 1. Load các file cấu hình
-// Dùng __DIR__ để đường dẫn chính xác tuyệt đối
+// 1. Load các file cấu hình và Model
 require_once __DIR__ . '/../../src/Config/db.php';
 require_once __DIR__ . '/../../src/Models/Product.php';
+
+// Sử dụng Namespace của ProductModel
+use DACS\Models\ProductModel;
 
 // 2. [BẢO MẬT] AUTH GUARD - Chặn người lạ
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
@@ -12,10 +14,10 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit;
 }
 
-// 3. [QUAN TRỌNG] Lấy kết nối Database
-$products = getAllProducts($conn); 
+// 3. Khởi tạo ProductModel (Thay thế cho cách gọi hàm cũ)
+$productModel = new ProductModel($conn);
 
-// 4. Định nghĩa các hằng số đường dẫn (Nếu chưa có)
+// 4. Định nghĩa các hằng số đường dẫn
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', dirname(dirname(__DIR__)));
 }
@@ -50,7 +52,6 @@ function processUpload($fileInput, $targetDir) {
 
 // --- XỬ LÝ FORM SUBMIT ---
 $errors = [];
-$successMessage = '';
 $name = $category = $priceRaw = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -88,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
                 $totalFiles = count($_FILES['extra_images']['name']);
                 for ($i = 0; $i < $totalFiles; $i++) {
-                    // Gom thông tin file lẻ từ mảng $_FILES
                     $singleFile = [
                         'name'     => $_FILES['extra_images']['name'][$i],
                         'type'     => $_FILES['extra_images']['type'][$i],
@@ -103,16 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 3. Gọi Model để lưu vào Database
-            // Biến $conn đã được khởi tạo ở đầu file -> Truyền vào hàm
-            $newId = addProduct($conn, $name, $category, $priceValue, $mainImgUrl, $extraImgUrls);
+            // 3. GỌI MODEL ĐỂ LƯU (Đã sửa theo chuẩn OOP)
+            // Gọi phương thức addProduct từ đối tượng $productModel
+            $newId = $productModel->addProduct($name, $category, $priceValue, $mainImgUrl, $extraImgUrls);
 
             if ($newId) {
-                // Set flash message cho đẹp (optional)
                 $_SESSION['flash_message'] = "Thêm thành công sản phẩm ID: $newId";
                 $_SESSION['flash_type'] = 'success';
                 
-                // Chuyển hướng về trang quản lý để tránh resubmit form khi F5
                 header('Location: manage_products.php');
                 exit;
             } else {
@@ -148,7 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .add-more-btn:hover { background: #cbd5e0; }
         input[type="file"] { padding: 8px; background: #fff; }
         
-        /* Chỉnh lại form container cho gọn */
         .contact-form-card { max-width: 800px; margin: 0 auto; }
     </style>
 </head>

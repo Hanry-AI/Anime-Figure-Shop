@@ -5,16 +5,19 @@ session_start();
 require_once __DIR__ . '/../../src/Config/db.php';
 require_once __DIR__ . '/../../src/Models/Product.php';
 
+// Sử dụng Namespace
+use DACS\Models\ProductModel;
+
 // 2. [BẢO MẬT] Chặn người lạ
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: /DACS/public/index.php');
     exit;
 }
 
-// 3. Lấy kết nối DB
-$products = getAllProducts($conn); 
+// 3. KHỞI TẠO MODEL (Thay vì gọi hàm lẻ)
+$productModel = new ProductModel($conn);
 
-// 4. Định nghĩa đường dẫn (Nếu chưa có)
+// 4. Định nghĩa đường dẫn
 if (!defined('PROJECT_ROOT')) define('PROJECT_ROOT', dirname(dirname(__DIR__)));
 if (!defined('UPLOAD_DIR')) define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
 if (!defined('DB_IMG_PATH')) define('DB_IMG_PATH', '/DACS/public/assets/img/');
@@ -37,7 +40,9 @@ function processUpload($fileInput) {
 
 // --- LẤY DỮ LIỆU SẢN PHẨM ---
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$product = getProductById($conn, $id);
+
+// GỌI MODEL: Lấy thông tin sản phẩm
+$product = $productModel->getProductById($id);
 
 if (!$product) {
     header('Location: manage_products.php');
@@ -53,8 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // A. Xử lý Xóa ảnh phụ
     if (isset($_POST['delete_image_id'])) {
         $imgId = (int)$_POST['delete_image_id'];
-        if (deleteProductImageById($conn, $imgId)) {
-            // Redirect để refresh trang (PRG Pattern)
+        
+        // GỌI MODEL: Xóa ảnh phụ
+        if ($productModel->deleteProductImageById($imgId)) {
             header("Location: edit_product.php?id=$id&msg=deleted");
             exit;
         } else {
@@ -65,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         $name     = trim($_POST['name'] ?? '');
         $category = $_POST['category'] ?? 'anime';
-        $price    = (int)preg_replace('/[^\d]/', '', $_POST['price']); // Chỉ lấy số
+        $price    = (int)preg_replace('/[^\d]/', '', $_POST['price']);
 
         if ($name === '') {
             $error = "Tên sản phẩm không được để trống.";
@@ -76,8 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mainImgPath = processUpload($_FILES['main_image']);
             }
 
-            // 2. Cập nhật bảng products
-            if (updateProduct($conn, $id, $name, $category, $price, $mainImgPath)) {
+            // 2. GỌI MODEL: Cập nhật bảng products
+            if ($productModel->updateProduct($id, $name, $category, $price, $mainImgPath)) {
                 
                 // 3. Upload thêm ảnh phụ (nếu có)
                 if (isset($_FILES['new_extra_images'])) {
@@ -97,12 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     if (!empty($newExtraUrls)) {
-                        addProductExtraImages($conn, $id, $newExtraUrls);
+                        // GỌI MODEL: Thêm ảnh phụ
+                        $productModel->addProductExtraImages($id, $newExtraUrls);
                     }
                 }
 
                 $success = "Cập nhật thành công!";
-                $product = getProductById($conn, $id); // Lấy lại dữ liệu mới nhất
+                // GỌI MODEL: Lấy lại dữ liệu mới nhất
+                $product = $productModel->getProductById($id); 
             } else {
                 $error = "Lỗi SQL: Không thể cập nhật sản phẩm.";
             }
@@ -114,8 +122,8 @@ if (isset($_GET['msg']) && $_GET['msg'] == 'deleted') {
     $success = "Đã xóa ảnh thành công!";
 }
 
-// Lấy danh sách ảnh phụ
-$extraImages = getProductImages($conn, $id);
+// GỌI MODEL: Lấy danh sách ảnh phụ
+$extraImages = $productModel->getProductImages($id);
 ?>
 
 <!DOCTYPE html>

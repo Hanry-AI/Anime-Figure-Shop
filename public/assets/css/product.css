@@ -17,7 +17,7 @@ body.product-page {
 /* ====== 2. LAYOUT CONTAINER ====== */
 .product-layout {
     max-width: 1200px;
-    margin: 140px auto 60px;
+    margin: 20px auto 60px;
     padding: 0 15px; /* Giảm padding ngoài một chút cho màn hình nhỏ */
 }
 

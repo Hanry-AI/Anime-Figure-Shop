@@ -6,15 +6,21 @@ session_start();
 require_once __DIR__ . '/../../src/Config/db.php';
 require_once __DIR__ . '/../../src/Models/User.php';
 
+// Sử dụng Namespace của User Model
+use DACS\Models\UserModel;
+
 // 2. Kiểm tra đăng nhập (Auth Guard)
 if (!isset($_SESSION['user_id'])) {
     header('Location: /DACS/public/index.php?page=auth&action=login');
     exit;
 }
 
-// 3. [QUAN TRỌNG] Khởi tạo kết nối Database
-// File này cần biến $conn để truyền vào các hàm bên dưới
-$conn = getDatabaseConnection();
+// 3. KHẮC PHỤC LỖI Ở ĐÂY
+// Xóa dòng $conn = getDatabaseConnection();
+// Biến $conn đã có sẵn từ file db.php được require ở trên.
+
+// Khởi tạo Model User (Theo chuẩn OOP)
+$userModel = new UserModel($conn);
 
 $userId = $_SESSION['user_id'];
 $successMsg = '';
@@ -31,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($newPass && $newPass !== $confirmPass) {
         $errorMsg = 'Mật khẩu xác nhận không khớp.';
     } else {
-        // Gọi Model cập nhật
-        $res = updateUser($conn, $userId, $name, $email, $newPass);
+        // Gọi hàm qua đối tượng $userModel (thay vì gọi hàm lẻ)
+        $res = $userModel->updateUser($userId, $name, $email, $newPass);
 
         if ($res === true) {
             $successMsg = 'Cập nhật thành công.';
@@ -44,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // 5. Lấy thông tin user mới nhất để hiển thị
-$currentUser = getUserById($conn, $userId);
+// Gọi hàm qua đối tượng $userModel
+$currentUser = $userModel->getUserById($userId);
 ?>
 <!DOCTYPE html>
 <html lang="vi">

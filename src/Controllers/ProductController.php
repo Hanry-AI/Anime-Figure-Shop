@@ -1,93 +1,127 @@
 <?php
+/**
+ * NAMESPACE (KHÔNG GIAN TÊN)
+ * Định danh vị trí của file này trong dự án.
+ * Giúp PHP hiểu DACS\Controllers\ProductController khác với các Controller của thư viện khác.
+ */
 namespace DACS\Controllers;
 
-// 1. Nhúng các file cần thiết
-// Dùng __DIR__ để đường dẫn luôn đúng dù gọi từ đâu
+// 1. Nhúng file cấu hình Database
 require_once __DIR__ . '/../Config/db.php';
+
+// 2. Nhúng Model Product (Đã được chuyển thành Class)
 require_once __DIR__ . '/../Models/Product.php';
 
+// Sử dụng namespace của Model để gọi cho gọn
+use DACS\Models\ProductModel;
+
 class ProductController {
+    
+    // Thuộc tính lưu kết nối Database
     private $conn;
+    
+    // Thuộc tính chứa đối tượng Model (Đây là cầu nối để lấy dữ liệu)
+    private $productModel;
 
     /**
-     * HÀM KHỞI TẠO (Constructor)
-     * Nhận kết nối DB từ bên ngoài (Dependency Injection)
-     * Giúp loại bỏ lỗi dùng "global" và dễ giải thích với giáo viên.
+     * HÀM KHỞI TẠO (__construct)
+     * ---------------------------
+     * Chạy ngay lập tức khi Controller được gọi.
+     * Nhiệm vụ:
+     * 1. Nhận kết nối DB từ bên ngoài ($db) -> Kỹ thuật Dependency Injection.
+     * 2. Khởi tạo đối tượng ProductModel để sẵn sàng sử dụng các hàm lấy dữ liệu.
      */
     public function __construct($db) {
         $this->conn = $db;
+        
+        // Khởi tạo Model và truyền kết nối DB vào cho nó
+        // Từ giờ, muốn lấy dữ liệu gì thì cứ nhờ $this->productModel làm
+        $this->productModel = new ProductModel($db);
     }
 
     /**
-     * TRANG ANIME
-     * Hiển thị danh sách sản phẩm thuộc danh mục Anime
+     * CONTROLLER: TRANG ANIME
+     * Nhiệm vụ: Lấy danh sách sản phẩm Anime và hiển thị ra View.
      */
     public function indexAnime() {
-        // Gọi hàm từ Model (Product.php), truyền kết nối $this->conn vào
-        $products = getProductsByCategory($this->conn, 'anime');
+        // GỌI MODEL: "Ê Model, lấy cho tao danh sách sản phẩm danh mục 'anime' nhé"
+        // Thay vì gọi hàm lẻ tẻ, ta gọi phương thức của đối tượng -> Chuẩn OOP
+        $products = $this->productModel->getProductsByCategory('anime');
 
-        // Gọi View hiển thị
+        // GỌI VIEW: Hiển thị giao diện và đổ dữ liệu $products vào
         require_once __DIR__ . '/../../views/pages/anime_index.php';
     }
 
     /**
-     * TRANG GUNDAM (Có phân trang)
-     * Logic phân trang được tính toán tại đây để View chỉ việc hiển thị
+     * CONTROLLER: TRANG GUNDAM (Có phân trang)
+     * Nhiệm vụ: Tính toán xem đang ở trang mấy, cần lấy bao nhiêu sản phẩm.
      */
     public function indexGundam() {
-        // Cấu hình số lượng sản phẩm mỗi trang
+        // Cấu hình: Mỗi trang hiển thị 10 sản phẩm
         $limit = 10;
         
-        // Lấy trang hiện tại từ URL, ép kiểu số nguyên (int) để bảo mật
+        // Lấy số trang hiện tại từ URL (Ví dụ: index.php?page_num=2)
+        // Nếu không có thì mặc định là trang 1. Ép kiểu (int) để bảo mật.
         $page = isset($_GET['page_num']) ? (int)$_GET['page_num'] : 1; 
         if ($page < 1) $page = 1;
         
-        // Tính vị trí bắt đầu lấy dữ liệu trong DB (Offset)
+        // Công thức tính vị trí bắt đầu lấy dữ liệu (Offset) trong SQL
+        // Ví dụ: Trang 1 -> offset 0. Trang 2 -> offset 10.
         $offset = ($page - 1) * $limit;
     
-        // Lấy danh sách sản phẩm và tổng số lượng từ Model
-        $products = getProductsByCategory($this->conn, 'gundam', $limit, $offset);
-        $totalProducts = countProductsByCategory($this->conn, 'gundam');
+        // GỌI MODEL:
+        // 1. Lấy danh sách sản phẩm cho trang hiện tại
+        $products = $this->productModel->getProductsByCategory('gundam', $limit, $offset);
         
-        // Tính tổng số trang (làm tròn lên)
+        // 2. Đếm tổng số sản phẩm Gundam có trong kho (để biết chia được bao nhiêu trang)
+        $totalProducts = $this->productModel->countProductsByCategory('gundam');
+        
+        // Tính tổng số trang (làm tròn lên bằng hàm ceil)
         $totalPages = ceil($totalProducts / $limit);
     
-        // Gọi View
+        // GỌI VIEW
         require_once __DIR__ . '/../../views/pages/gundam_index.php';
     }
 
     /**
-     * TRANG MARVEL
+     * CONTROLLER: TRANG MARVEL
      */
     public function indexMarvel() {
-        $products = getProductsByCategory($this->conn, 'marvel');
+        // Logic đơn giản giống trang Anime
+        $products = $this->productModel->getProductsByCategory('marvel');
+        
         require_once __DIR__ . '/../../views/pages/marvel_index.php';
     }
 
     /**
-     * TRANG CHI TIẾT SẢN PHẨM
+     * CONTROLLER: TRANG CHI TIẾT SẢN PHẨM
+     * Nhiệm vụ: Hiển thị thông tin đầy đủ của 1 sản phẩm cụ thể.
      */
     public function detail() {
-        // Lấy ID từ URL và ép kiểu int để chống hack SQL Injection
+        // Lấy ID sản phẩm từ URL (Ví dụ: ...&id=15)
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-        // Lấy thông tin sản phẩm
-        $product = getProductById($this->conn, $id);
+        // GỌI MODEL: Lấy thông tin chi tiết sản phẩm theo ID
+        $product = $this->productModel->getProductById($id);
 
-        // Nếu không tìm thấy sản phẩm, quay về trang chủ
+        // Kiểm tra: Nếu sản phẩm không tồn tại (do ID sai hoặc đã bị xóa)
         if (!$product) {
+            // Chuyển hướng người dùng về trang chủ
             header('Location: /DACS/public/index.php');
             exit;
         }
 
-        // Lấy dữ liệu phụ trợ (Ảnh gallery, Sản phẩm liên quan)
-        $images = getProductImages($this->conn, $id);
-        $relatedProducts = getRelatedProducts($this->conn, $product['category'], $id);
+        // GỌI MODEL: Lấy thêm các dữ liệu phụ trợ
+        // 1. Lấy danh sách ảnh phụ (Gallery) để làm slide ảnh
+        $images = $this->productModel->getProductImages($id);
+        
+        // 2. Lấy danh sách sản phẩm liên quan (Gợi ý cho khách hàng mua thêm)
+        $relatedProducts = $this->productModel->getRelatedProducts($product['category'], $id);
 
-        // Biến hỗ trợ JS đổi ảnh
+        // Biến này dùng cho Javascript để đổi ảnh khi click vào ảnh nhỏ
         $firstImg = $product['image_url']; 
 
-        // Gọi View
+        // GỌI VIEW
         require_once __DIR__ . '/../../views/pages/product.php';
     }
 }

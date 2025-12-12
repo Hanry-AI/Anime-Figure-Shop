@@ -15,12 +15,14 @@ class Router {
     }
 
     public function resolve(Request $request) {
-        // Lấy thông tin page từ Request object (thay vì $_GET)
         $page   = $request->get('page', 'home');
-        $action = $request->get('action', 'index');
+        $action = $request->get('action', 'index'); // Lấy tên hàm cần chạy
 
         switch ($page) {
-            // --- CÁC ROUTE ĐÃ CÓ ---
+            case 'auth':
+                (new AuthController($this->conn))->index();
+                break;
+
             case 'anime':
                 (new ProductController($this->conn))->indexAnime($request);
                 break;
@@ -37,8 +39,6 @@ class Router {
                 (new ProductController($this->conn))->detail($request); 
                 break;
 
-            // --- BỔ SUNG CÁC ROUTE CÒN THIẾU TẠI ĐÂY ---
-
             case 'contact':
                 (new PageController($this->conn))->contact();
                 break;
@@ -47,19 +47,32 @@ class Router {
                 (new PageController($this->conn))->promo();
                 break;
 
-            case 'cart':
-                (new CartController($this->conn))->index();
-                break;
-
-            case 'auth':
-                (new AuthController($this->conn))->index();
-                break;
-
             case 'profile':
                 (new PageController($this->conn))->profile();
                 break;
 
-            // --- MẶC ĐỊNH ---
+            case 'cart':
+                $cartController = new CartController($this->conn);
+                switch ($action) {
+                    case 'add':
+                        $cartController->add($request);
+                        break;
+                    case 'update':
+                        $cartController->update($request);
+                        break;
+                    case 'delete':
+                        $cartController->delete($request);
+                        break;
+                    case 'api_info': // [MỚI] API lấy thông tin giỏ hàng cho Sidebar
+                        $cartController->apiInfo();
+                        break;
+                    case 'index':
+                    default:
+                        $cartController->index();
+                        break;
+                }
+                break;
+
             case 'home':
             default:
                 (new HomeController($this->conn))->index();

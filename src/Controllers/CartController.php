@@ -1,88 +1,160 @@
 <?php
 namespace DACS\Controllers;
 
-// Sử dụng các Helper đã được Composer nạp
-// Không cần require_once db.php thủ công nữa nếu đã có App.php khởi tạo DB
-use DACS\Helpers\ImageHelper;
+use DACS\Models\ProductModel;
+use DACS\Core\Request;
+use DACS\Core\View;
+use DACS\Helpers\ImageHelper; 
 use DACS\Helpers\FormatHelper;
 
 class CartController {
     private $conn;
+    private $productModel;
 
-    /**
-     * HÀM KHỞI TẠO (__construct)
-     */
     public function __construct($db) {
         $this->conn = $db;
+        $this->productModel = new ProductModel($db);
+        
+        // Luôn đảm bảo session giỏ hàng tồn tại
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
     }
 
-    /**
-     * HÀM HIỂN THỊ GIỎ HÀNG
-     */
+    // 1. Xem giỏ hàng
     public function index() {
-        // 1. Lấy dữ liệu giỏ hàng gửi từ trình duyệt
-        $cartJson = $_POST['cart'] ?? '[]';
-        $items    = json_decode($cartJson, true);
-
-        $finalCart   = [];
+        $cart = $_SESSION['cart'];
+        $finalCart = [];
         $totalAmount = 0;
 
-        if (is_array($items) && !empty($items)) {
+        if (!empty($cart)) {
+            // Lấy danh sách ID sản phẩm
+            $ids = array_keys($cart);
             
-            // a. Lọc lấy danh sách ID
-            $ids = [];
-            foreach ($items as $item) {
-                $id = isset($item['id']) ? (int)$item['id'] : 0;
-                if ($id > 0) $ids[] = $id;
-            }
-            $ids = array_unique($ids);
+            // Lấy thông tin chi tiết từ Database để đảm bảo giá đúng
+            // (Lưu ý: Bạn nên viết hàm getProductsByIds trong Model để tối ưu hơn, 
+            // ở đây mình dùng vòng lặp tạm thời cho dễ hiểu)
+            foreach ($ids as $id) {
+                $product = $this->productModel->getProductById($id);
+                if ($product) {
+                    $qty = (int)$cart[$id];
+                    $lineTotal = (float)$product['price'] * $qty;
+                    $totalAmount += $lineTotal;
 
-            if (!empty($ids)) {
-                // b. Query Database lấy thông tin
-                $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $types = str_repeat('i', count($ids));
-                
-                $sql = "SELECT id, name, price, image_url FROM products WHERE id IN ($placeholders)";
-                
-                $stmt = $this->conn->prepare($sql);
-                $stmt->bind_param($types, ...$ids);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                $dbProducts = [];
-                while ($row = $result->fetch_assoc()) {
-                    $dbProducts[$row['id']] = $row;
-                }
-                $stmt->close();
-
-                // c. Tính toán tổng tiền
-                foreach ($items as $item) {
-                    $id  = (int)($item['id'] ?? 0);
-                    $qty = (int)($item['quantity'] ?? 0);
-                    
-                    if ($id > 0 && $qty > 0 && isset($dbProducts[$id])) {
-                        $product = $dbProducts[$id];
-                        
-                        $lineTotal = $product['price'] * $qty;
-                        $totalAmount += $lineTotal;
-
-                        // Thêm vào danh sách hiển thị
-                        $finalCart[] = [
-                            'id'         => $id,
-                            'name'       => $product['name'],
-                            // [SỬA LỖI TẠI ĐÂY] Dùng ImageHelper::normalizeUrl
-                            'img'        => ImageHelper::normalizeUrl($product['image_url']),
-                            'price'      => $product['price'],
-                            'qty'        => $qty,
-                            'line_total' => $lineTotal,
-                        ];
-                    }
+                    $finalCart[] = [
+                        'id' => $product['id'],
+                        'name' => $product['name'],
+                        'price' => $product['price'],
+                        'img' => ImageHelper::normalizeUrl($product['image_url']),
+                        'qty' => $qty,
+                        'line_total' => $lineTotal
+                    ];
                 }
             }
         }
 
-        // 2. Gọi View hiển thị
-        require_once __DIR__ . '/../../views/pages/cart.php';
+        View::render('pages/cart', [
+            'finalCart' => $finalCart,
+            'totalAmount' => $totalAmount
+        ]);
+    }
+
+    public function apiInfo() {
+        $cart = $_SESSION['cart'];
+        $items = [];
+        $totalAmount = 0;
+
+        if (!empty($cart)) {
+            $ids = array_keys($cart);
+            // Lấy thông tin sản phẩm từ DB
+            // (Lưu ý: Nếu Model chưa có getProductsByIds, ta dùng vòng lặp tạm)
+            foreach ($ids as $id) {
+                $product = $this->productModel->getProductById($id);
+                if ($product) {
+                    $qty = (int)$cart[$id];
+                    $lineTotal = (float)$product['price'] * $qty;
+                    $totalAmount += $lineTotal;
+
+                    $items[] = [
+                        'id' => $product['id'],
+                        'name' => $product['name'],
+                        'price_raw' => $product['price'],
+                        // Format sẵn giá tiền để JS chỉ việc hiện
+                        'price_formatted' => number_format($product['price'], 0, ',', '.') . '₫',
+                        'img' => ImageHelper::normalizeUrl($product['image_url']),
+                        'quantity' => $qty,
+                        'line_total' => $lineTotal
+                    ];
+                }
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'items' => $items,
+            'total_amount' => $totalAmount,
+            'total_formatted' => number_format($totalAmount, 0, ',', '.') . '₫',
+            'count' => array_sum($cart)
+        ]);
+        exit;
+    }
+
+    // 2. Thêm vào giỏ (API)
+    public function add(Request $request) {
+        // Nhận dữ liệu JSON từ JS
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        $qty = isset($data['quantity']) ? (int)$data['quantity'] : 1;
+
+        if ($id > 0) {
+            if (isset($_SESSION['cart'][$id])) {
+                $_SESSION['cart'][$id] += $qty;
+            } else {
+                $_SESSION['cart'][$id] = $qty;
+            }
+            
+            // Tính tổng số lượng để cập nhật icon giỏ hàng
+            $totalItems = array_sum($_SESSION['cart']);
+
+            echo json_encode([
+                'status' => 'success', 
+                'message' => 'Đã thêm vào giỏ!',
+                'total_count' => $totalItems
+            ]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Sản phẩm không hợp lệ']);
+        }
+        exit;
+    }
+
+    // 3. Xóa sản phẩm (API)
+    public function delete(Request $request) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = (int)($data['id'] ?? 0);
+
+        if (isset($_SESSION['cart'][$id])) {
+            unset($_SESSION['cart'][$id]);
+        }
+
+        echo json_encode(['status' => 'success']);
+        exit;
+    }
+    
+    // 4. Cập nhật số lượng (API - Dành cho tính năng +/- sau này)
+    public function update(Request $request) {
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = (int)($data['id'] ?? 0);
+        $qty = (int)($data['quantity'] ?? 1);
+        
+        if ($id > 0) {
+            if ($qty <= 0) {
+                unset($_SESSION['cart'][$id]);
+            } else {
+                $_SESSION['cart'][$id] = $qty;
+            }
+        }
+        echo json_encode(['status' => 'success']);
+        exit;
     }
 }
 ?>

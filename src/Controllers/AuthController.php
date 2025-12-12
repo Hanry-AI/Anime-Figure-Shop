@@ -123,8 +123,6 @@ class AuthController {
             $_SESSION['user_role'] = $user['role']; // Lưu quyền để phân quyền Admin/User
 
             // 1. Tạo ID session mới để bảo mật (tránh session fixation)
-            session_regenerate_id(true);
-                        
             // 2. Ép buộc lưu dữ liệu session xuống file ngay lập tức
             session_write_close();
 

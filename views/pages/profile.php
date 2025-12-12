@@ -1,27 +1,36 @@
 <?php
 // views/pages/profile.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // 1. Load file cấu hình và Model
+// Lưu ý: Nếu đã chạy qua index.php (có autoload) thì các dòng require này có thể thừa, 
+// nhưng giữ lại để đảm bảo file chạy được độc lập nếu cần.
 require_once __DIR__ . '/../../src/Config/db.php';
-require_once __DIR__ . '/../../src/Models/User.php';
+// [SỬA LỖI 1]: Đổi User.php thành UserModel.php
+require_once __DIR__ . '/../../src/Models/UserModel.php'; 
 
-// Sử dụng Namespace của User Model
+use DACS\Config\Database; // [MỚI] Sử dụng namespace Database
 use DACS\Models\UserModel;
 
-// 2. Kiểm tra đăng nhập (Auth Guard)
+// 2. Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
     header('Location: /DACS/public/index.php?page=auth&action=login');
     exit;
 }
 
-// 3. KHẮC PHỤC LỖI Ở ĐÂY
-// Xóa dòng $conn = getDatabaseConnection();
-// Biến $conn đã có sẵn từ file db.php được require ở trên.
+// 3. [SỬA LỖI 2] Khởi tạo kết nối DB
+// File db.php chỉ định nghĩa Class, ta phải "new" nó để lấy connection
+try {
+    $db = new Database();
+    $conn = $db->getConnection();
+} catch (Exception $e) {
+    die("Lỗi kết nối CSDL: " . $e->getMessage());
+}
 
-// Khởi tạo Model User (Theo chuẩn OOP)
+// Khởi tạo Model
 $userModel = new UserModel($conn);
-
 $userId = $_SESSION['user_id'];
 $successMsg = '';
 $errorMsg = '';
@@ -33,24 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newPass = !empty($_POST['new_password']) ? $_POST['new_password'] : null;
     $confirmPass = !empty($_POST['confirm_new_password']) ? $_POST['confirm_new_password'] : null;
 
-    // Validate cơ bản
+    // Validate
     if ($newPass && $newPass !== $confirmPass) {
         $errorMsg = 'Mật khẩu xác nhận không khớp.';
     } else {
-        // Gọi hàm qua đối tượng $userModel (thay vì gọi hàm lẻ)
         $res = $userModel->updateUser($userId, $name, $email, $newPass);
 
         if ($res === true) {
             $successMsg = 'Cập nhật thành công.';
-            $_SESSION['user_name'] = $name; // Cập nhật luôn tên trong session
+            $_SESSION['user_name'] = $name; 
         } else {
-            $errorMsg = $res; // Lỗi từ Model trả về (VD: Email trùng)
+            $errorMsg = $res; 
         }
     }
 }
 
-// 5. Lấy thông tin user mới nhất để hiển thị
-// Gọi hàm qua đối tượng $userModel
+// 5. Lấy thông tin user mới nhất
 $currentUser = $userModel->getUserById($userId);
 ?>
 <!DOCTYPE html>
@@ -61,10 +68,16 @@ $currentUser = $userModel->getUserById($userId);
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/DACS/public/assets/css/profile_styles.css">
     <link rel="stylesheet" href="/DACS/public/assets/css/styles.css">
-    <link rel="stylesheet" href="../layouts/header.css">
+    <link rel="stylesheet" href="/DACS/views/layouts/header.css">
 </head>
 <body class="profile-page">
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+
+<?php 
+// Include header (đường dẫn tương đối)
+if (file_exists(__DIR__ . '/../layouts/header.php')) {
+    include __DIR__ . '/../layouts/header.php';
+}
+?>
 
 <main class="profile-main">
     <h2 class="profile-title">Thông tin tài khoản</h2>
@@ -103,10 +116,8 @@ $currentUser = $userModel->getUserById($userId);
             <label for="newPassword">Mật khẩu mới (để trống nếu không đổi)</label>
             <div class="input-wrapper">
                 <input type="password" id="newPassword" name="new_password" placeholder="••••••••">
-                <button type="button"
-                        class="toggle-password"
-                        data-target="newPassword">
-                    <i class="fa-regular fa-eye"></i>
+                <button type="button" class="toggle-password" data-target="newPassword">
+                    <i class="fas fa-eye"></i>
                 </button>
             </div>
         </div>
@@ -115,10 +126,8 @@ $currentUser = $userModel->getUserById($userId);
             <label for="confirmNewPassword">Xác nhận mật khẩu mới</label>
             <div class="input-wrapper">
                 <input type="password" id="confirmNewPassword" name="confirm_new_password" placeholder="••••••••">
-                <button type="button"
-                        class="toggle-password"
-                        data-target="confirmNewPassword">
-                    <i class="fa-regular fa-eye"></i>
+                <button type="button" class="toggle-password" data-target="confirmNewPassword">
+                    <i class="fas fa-eye"></i>
                 </button>
             </div>
         </div>
@@ -130,6 +139,8 @@ $currentUser = $userModel->getUserById($userId);
 
         <button type="submit" class="submit-btn">Lưu thay đổi</button>
     </form>
+    <?php else: ?>
+        <p>Không tìm thấy thông tin tài khoản.</p>
     <?php endif; ?>
 </main>
 

@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Định nghĩa đường dẫn gốc
 define('PROJECT_ROOT', dirname(__DIR__));
 

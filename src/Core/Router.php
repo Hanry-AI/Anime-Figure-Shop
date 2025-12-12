@@ -20,10 +20,8 @@ class Router {
         $action = $request->get('action', 'index');
 
         switch ($page) {
-            // --- CÁC ROUTE CŨ ... ---
-
+            // --- CÁC ROUTE ĐÃ CÓ ---
             case 'anime':
-                // [QUAN TRỌNG] Truyền $request vào hàm indexAnime
                 (new ProductController($this->conn))->indexAnime($request);
                 break;
                 
@@ -38,9 +36,30 @@ class Router {
             case 'product':
                 (new ProductController($this->conn))->detail($request); 
                 break;
-    
-            // ... (Các case khác bạn cũng nên truyền $request vào nếu cần dùng) ...
 
+            // --- BỔ SUNG CÁC ROUTE CÒN THIẾU TẠI ĐÂY ---
+
+            case 'contact':
+                (new PageController($this->conn))->contact();
+                break;
+
+            case 'promo':
+                (new PageController($this->conn))->promo();
+                break;
+
+            case 'cart':
+                (new CartController($this->conn))->index();
+                break;
+
+            case 'auth':
+                (new AuthController($this->conn))->index();
+                break;
+
+            case 'profile':
+                (new PageController($this->conn))->profile();
+                break;
+
+            // --- MẶC ĐỊNH ---
             case 'home':
             default:
                 (new HomeController($this->conn))->index();

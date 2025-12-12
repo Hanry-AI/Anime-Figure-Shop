@@ -122,6 +122,12 @@ class AuthController {
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role']; // Lưu quyền để phân quyền Admin/User
 
+            // 1. Tạo ID session mới để bảo mật (tránh session fixation)
+            session_regenerate_id(true);
+                        
+            // 2. Ép buộc lưu dữ liệu session xuống file ngay lập tức
+            session_write_close();
+
             // Điều hướng trình duyệt về trang chủ
             header('Location: /DACS/public/index.php');
             exit; // Dừng code ngay lập tức sau khi header location
@@ -176,7 +182,9 @@ class AuthController {
         $_SESSION = [];
         
         // Hủy session hoàn toàn trên server
-        session_destroy();
+        if (session_id()) {
+            session_destroy();
+        }
 
         // Quay về trang chủ
         header('Location: /DACS/public/index.php');

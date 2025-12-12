@@ -106,7 +106,10 @@
 
 <!-- GLOBAL LOGIN FLAG + JS -->
 <script>
-    // Đọc cờ đăng nhập từ attribute trên <body>
-    window.IS_LOGGED_IN = document.body.getAttribute('data-logged-in') === '1';
+    // Lấy thông tin trực tiếp từ PHP Session
+    window.IS_LOGGED_IN = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+    
+    // Nếu đã đăng nhập thì lấy ID, ngược lại là null
+    window.CURRENT_USER_ID = <?php echo isset($_SESSION['user_id']) ? json_encode($_SESSION['user_id']) : 'null'; ?>;
 </script>
 <script src="/DACS/public/assets/js/scripts.js"></script>

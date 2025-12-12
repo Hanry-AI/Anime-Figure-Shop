@@ -1,7 +1,20 @@
-// Đọc giỏ hàng từ localStorage (dùng chung cho mọi trang)
+// Hàm tạo tên khóa lưu trữ dựa trên ID người dùng
+function getCartStorageKey() {
+    // Nếu đã đăng nhập, dùng khóa riêng kèm ID (ví dụ: fw_cart_user_15)
+    if (window.IS_LOGGED_IN && window.CURRENT_USER_ID) {
+        return 'fw_cart_user_' + window.CURRENT_USER_ID;
+    }
+    // Nếu chưa đăng nhập (khách), dùng khóa chung
+    return 'fw_cart_guest';
+}
+
+// Đọc giỏ hàng từ localStorage
 function loadCartFromStorage() {
     try {
-        const raw = localStorage.getItem('fw_cart');
+        // [THAY ĐỔI] Lấy key động
+        const storageKey = getCartStorageKey();
+        const raw = localStorage.getItem(storageKey);
+        
         if (!raw) return [];
 
         const data = JSON.parse(raw);
@@ -12,7 +25,6 @@ function loadCartFromStorage() {
                 return {
                     id: Number(item.id) || 0,
                     name: item.name || '',
-                    // price chỉ dùng cho HIỂN THỊ ở client
                     price: Math.max(Number(item.price) || 0, 0),
                     quantity: Math.max(Number(item.quantity) || 0, 0)
                 };
@@ -29,7 +41,9 @@ function loadCartFromStorage() {
 // Lưu giỏ hàng xuống localStorage
 function saveCartToStorage() {
     try {
-        localStorage.setItem('fw_cart', JSON.stringify(cart));
+        // [THAY ĐỔI] Lấy key động
+        const storageKey = getCartStorageKey();
+        localStorage.setItem(storageKey, JSON.stringify(cart));
     } catch (e) {
         console.error('Lỗi lưu giỏ hàng vào localStorage', e);
     }

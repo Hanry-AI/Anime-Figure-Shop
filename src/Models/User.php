@@ -1,6 +1,8 @@
 <?php
 namespace DACS\Models;
 
+// Đảm bảo file db.php tồn tại khi file này được gọi độc lập (nếu cần)
+// Nhưng thường Controller đã gọi rồi. Dòng này giữ lại để an toàn.
 require_once __DIR__ . '/../Config/db.php';
 
 class UserModel {
@@ -11,8 +13,64 @@ class UserModel {
     }
 
     /**
-     * Lấy thông tin user theo ID
+     * --- [MỚI] HÀM ĐĂNG NHẬP ---
+     * Kiểm tra email và mật khẩu
      */
+    public function login($email, $password) {
+        // 1. Tìm user theo email
+        $sql = "SELECT * FROM users WHERE email = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // 2. Nếu tìm thấy user
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+            
+            // 3. Kiểm tra mật khẩu hash
+            if (password_verify($password, $user['password'])) {
+                return $user; // Trả về mảng thông tin user
+            }
+        }
+
+        // Sai email hoặc sai pass đều trả về false
+        return false;
+    }
+
+    /**
+     * --- [MỚI] HÀM ĐĂNG KÝ ---
+     * Thêm user mới vào DB
+     */
+    public function register($name, $email, $password) {
+        // 1. Kiểm tra xem email đã tồn tại chưa
+        $checkSql = "SELECT id FROM users WHERE email = ?";
+        $stmt = $this->conn->prepare($checkSql);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        
+        if ($stmt->get_result()->num_rows > 0) {
+            return "Email này đã được sử dụng.";
+        }
+
+        // 2. Mã hóa mật khẩu
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        
+        // 3. Chèn vào DB (Mặc định role là 'user')
+        $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("sss", $name, $email, $hashed_password);
+
+        if ($stmt->execute()) {
+            // Trả về ID của user vừa tạo (số nguyên)
+            return $this->conn->insert_id;
+        } else {
+            return "Lỗi hệ thống: " . $stmt->error;
+        }
+    }
+
+    // --- CÁC HÀM CŨ CỦA BẠN (GIỮ NGUYÊN) ---
+
     public function getUserById($id) {
         $sql = "SELECT id, name, email, role, created_at FROM users WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
@@ -24,11 +82,8 @@ class UserModel {
         return $user;
     }
 
-    /**
-     * Cập nhật thông tin user
-     */
     public function updateUser($id, $name, $email, $newPassword = null) {
-        // 1. Kiểm tra email có bị trùng với người khác không
+        // 1. Kiểm tra email trùng
         $checkSql = "SELECT id FROM users WHERE email = ? AND id != ?";
         $checkStmt = $this->conn->prepare($checkSql);
         $checkStmt->bind_param("si", $email, $id);
@@ -38,15 +93,13 @@ class UserModel {
         }
         $checkStmt->close();
 
-        // 2. Thực hiện cập nhật
+        // 2. Update
         if ($newPassword) {
-            // Nếu có đổi mật khẩu (Cần mã hóa)
             $hashedPass = password_hash($newPassword, PASSWORD_DEFAULT);
             $sql = "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?";
             $stmt = $this->conn->prepare($sql);
             $stmt->bind_param("sssi", $name, $email, $hashedPass, $id);
         } else {
-            // Nếu giữ nguyên mật khẩu
             $sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
             $stmt = $this->conn->prepare($sql);
             $stmt->bind_param("ssi", $name, $email, $id);

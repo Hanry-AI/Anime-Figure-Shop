@@ -4,104 +4,31 @@ session_start();
 // Định nghĩa đường dẫn gốc
 define('PROJECT_ROOT', dirname(__DIR__));
 
-// --- 1. LOAD FILE CẤU HÌNH & CONTROLLER ---
-// Khi require file db.php này, biến $conn sẽ được tạo ra và có thể dùng ngay bên dưới
-require_once PROJECT_ROOT . '/src/Config/db.php';
+// --- 1. LOAD COMPOSER (QUAN TRỌNG) ---
+// Dòng này sẽ tự động nạp tất cả các file Class (Model, Controller, Helper...)
+// Bạn không cần require thủ công từng file nữa.
+require_once PROJECT_ROOT . '/vendor/autoload.php';
 
-require_once PROJECT_ROOT . '/src/Helpers/image_helper.php';
-require_once PROJECT_ROOT . '/src/Helpers/format_helper.php';
+// --- 2. SỬ DỤNG NAMESPACE ---
+use DACS\Config\Database;
+use DACS\Core\Router;
 
-// Load các Controller thủ công
-require_once PROJECT_ROOT . '/src/Controllers/AuthController.php';
-require_once PROJECT_ROOT . '/src/Controllers/HomeController.php';
-require_once PROJECT_ROOT . '/src/Controllers/PageController.php';
-require_once PROJECT_ROOT . '/src/Controllers/ProductController.php';
-require_once PROJECT_ROOT . '/src/Controllers/CartController.php';
-
-// --- 2. KHAI BÁO SỬ DỤNG NAMESPACE ---
-use DACS\Controllers\AuthController;
-use DACS\Controllers\ProductController;
-use DACS\Controllers\HomeController;
-use DACS\Controllers\PageController;
-use DACS\Controllers\CartController;
-
-// --- 3. ĐIỀU HƯỚNG (ROUTER) ---
-$page   = $_GET['page'] ?? 'home';
-$action = $_GET['action'] ?? 'index';
-
-switch ($page) {
-    // --- KHU VỰC TÀI KHOẢN ---
-    case 'auth':
-    case 'login':
-    case 'register':
-        // [CẬP NHẬT] Truyền $conn vào đây
-        $controller = new AuthController($conn); 
-        
-        if ($action === 'logout') {
-            $controller->logout();
-        } else {
-            $controller->index();
-        }
-        break;
-
-    // --- CÁC TRANG SẢN PHẨM (Đã sửa Controller) ---
-    case 'anime':
-        // [QUAN TRỌNG] Truyền $conn vào đây vì ProductController đã sửa __construct($db)
-        $controller = new ProductController($conn);
-        $controller->indexAnime();
-        break;
-        
-    case 'gundam':
-        // [QUAN TRỌNG] Truyền $conn vào
-        $controller = new ProductController($conn);
-        $controller->indexGundam();
-        break;
-        
-    case 'marvel':
-        // [QUAN TRỌNG] Truyền $conn vào
-        $controller = new ProductController($conn);
-        $controller->indexMarvel();
-        break;
-
-    // --- CÁC TRANG KHÁC ---
+try {
+    // --- 3. KHỞI TẠO APP ---
     
-    case 'product':
-        // [QUAN TRỌNG] Truyền $conn vào (Trang chi tiết cũng dùng ProductController)
-        $controller = new ProductController($conn);
-        $controller->detail(); 
-        break;
+    // Khởi tạo kết nối Database (từ file src/Config/db.php hoặc Database.php)
+    $db = new Database();
+    $conn = $db->getConnection();
 
-    case 'contact':
-        // [CẬP NHẬT] Truyền $conn vào
-        $controller = new PageController($conn);
-        $controller->contact();
-        break;
+    // Khởi chạy Router để điều hướng (từ file src/Core/Router.php)
+    $router = new Router($conn);
+    $router->run();
 
-    case 'promo':
-        // [CẬP NHẬT] Truyền $conn vào
-        $controller = new PageController($conn);
-        $controller->promo();
-        break;
-        
-    case 'profile':
-        // [CẬP NHẬT] Truyền $conn vào
-        $controller = new PageController($conn);
-        $controller->profile();
-        break;
-
-    // --- TRANG CHỦ ---
-    case 'home':
-    default:
-        // [CẬP NHẬT] Truyền thêm $conn vào đây
-        // Vì HomeController vừa được sửa hàm __construct($db)
-        $controller = new HomeController($conn); 
-        $controller->index();
-        break;
-        
-    case 'cart':
-        // [CẬP NHẬT] Truyền $conn vào CartController
-        $controller = new CartController($conn);
-        $controller->index();
-        break;
+} catch (Exception $e) {
+    // Hiển thị lỗi thân thiện nếu có sự cố
+    echo "<div style='color:red; font-weight:bold;'>Lỗi hệ thống: " . $e->getMessage() . "</div>";
+    
+    // Gợi ý debug:
+    echo "<br><em>Gợi ý: Kiểm tra xem bạn đã chạy lệnh 'composer dump-autoload' chưa?</em>";
 }
 ?>

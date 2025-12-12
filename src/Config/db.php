@@ -1,15 +1,30 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "dacs2";
+namespace DACS\Config;
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/**
+ * Class Database
+ * Đóng gói kết nối CSDL.
+ * Dù file tên là db.php nhưng Class tên là Database.
+ */
+class Database {
+    private $host = "localhost";
+    private $user = "root";
+    private $pass = "";
+    private $dbname = "dacs2";
+    
+    public $conn;
+    
+    public function __construct() {
+        $this->conn = new \mysqli($this->host, $this->user, $this->pass, $this->dbname);
+        
+        if ($this->conn->connect_error) {
+            die("Lỗi kết nối: " . $this->conn->connect_error);
+        }
+        $this->conn->set_charset("utf8mb4");
+    }
 
-if ($conn->connect_error) {
-    die("Kết nối thất bại: " . $conn->connect_error);
+    public function getConnection() {
+        return $this->conn;
+    }
 }
-
-$conn->set_charset("utf8mb4");
-
-
+?>

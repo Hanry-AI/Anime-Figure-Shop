@@ -161,7 +161,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                             <a href="index.php?page=product&id=<?= (int)$row['id']; ?>">
                                 <div class="product-image">
-                                    <img src="<?= htmlspecialchars(normalizeImageUrl($row['img_url']), ENT_QUOTES, 'UTF-8'); ?>"
+                                    <img src="<?= htmlspecialchars($row['img_url'], ENT_QUOTES, 'UTF-8'); ?>"
                                          alt="<?= htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?>">
                                 </div>
                             </a>

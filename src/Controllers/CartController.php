@@ -3,9 +3,8 @@ namespace DACS\Controllers;
 
 // Nhúng các file cấu hình và helper (hỗ trợ xử lý ảnh, định dạng tiền)
 require_once __DIR__ . '/../Config/db.php';
-require_once __DIR__ . '/../Helpers/image_helper.php';
-require_once __DIR__ . '/../Helpers/format_helper.php';
-
+use DACS\Helpers\ImageHelper;
+use DACS\Helpers\FormatHelper;
 class CartController {
     private $conn;
 

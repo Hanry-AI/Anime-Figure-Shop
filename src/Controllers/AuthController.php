@@ -4,7 +4,6 @@ namespace DACS\Controllers;
 // 1. Nhúng file Config (để lấy kết nối DB nếu cần kiểm tra luồng)
 // và file Model User (chứa logic xử lý dữ liệu người dùng)
 require_once __DIR__ . '/../Config/db.php';
-require_once __DIR__ . '/../Models/User.php';
 
 // 2. Sử dụng Namespace để gọi Class ngắn gọn hơn
 use DACS\Models\UserModel;

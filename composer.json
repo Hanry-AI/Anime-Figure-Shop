@@ -15,6 +15,9 @@
     "autoload": {
         "psr-4": {
             "DACS\\": "src/"
-        }
+        },
+        "files": [
+            "src/Config/db.php"
+        ]
     }
 }

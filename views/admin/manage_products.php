@@ -1,38 +1,40 @@
 <?php
 /**
  * TRANG QUẢN LÝ SẢN PHẨM (ADMIN DASHBOARD)
- * ----------------------------------------
- * Nhiệm vụ: Hiển thị danh sách toàn bộ sản phẩm, cung cấp nút Thêm, Sửa, Xóa.
  */
 
 session_start();
 
-// 1. Nhúng các file cấu hình và Model cần thiết
-// Sử dụng __DIR__ để đường dẫn luôn chính xác, không phụ thuộc vào vị trí gọi file
-require_once __DIR__ . '/../../src/Config/db.php';
-require_once __DIR__ . '/../../src/Models/Product.php';     // Nhúng Class ProductModel
-require_once __DIR__ . '/../../src/Helpers/image_helper.php'; // Nhúng hàm xử lý ảnh
+// Định nghĩa đường dẫn gốc (để trỏ về vendor/autoload)
+define('PROJECT_ROOT', dirname(dirname(__DIR__)));
 
-// Sử dụng namespace của ProductModel (Vì file Model đã có namespace DACS\Models)
+// 1. Load Composer Autoload (Thay thế cho các lệnh require thủ công)
+require_once PROJECT_ROOT . '/vendor/autoload.php';
+
+// 2. Sử dụng Namespace chuẩn
+use DACS\Config\Database;
 use DACS\Models\ProductModel;
+use DACS\Helpers\ImageHelper;
+use DACS\Helpers\FormatHelper;
 
-// 2. Kiểm tra quyền Admin (BẢO MẬT)
-// Logic: Nếu chưa đăng nhập HOẶC vai trò không phải 'admin' -> Chặn truy cập.
+// 3. Kiểm tra quyền Admin (Bảo mật)
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    // Chuyển hướng về trang chủ
     header('Location: /DACS/public/index.php');
-    exit; // Lệnh này rất quan trọng: Dừng chạy code ngay lập tức để hacker không xem được nội dung bên dưới
+    exit;
 }
 
-// 3. Lấy dữ liệu từ Database (theo chuẩn OOP)
-// Thay vì gọi hàm lẻ tẻ getAllProducts($conn), ta làm như sau:
+try {
+    // 4. Kết nối Database & Khởi tạo Model (Chuẩn OOP)
+    $db = new Database();
+    $conn = $db->getConnection();
+    $productModel = new ProductModel($conn);
 
-// BƯỚC A: Khởi tạo đối tượng Model và truyền kết nối DB vào (Dependency Injection)
-$productModel = new ProductModel($conn);
+    // 5. Lấy danh sách sản phẩm
+    $products = $productModel->getAllProducts();
 
-// BƯỚC B: Gọi phương thức getAllProducts() từ đối tượng vừa tạo
-$products = $productModel->getAllProducts();
-
+} catch (Exception $e) {
+    die("Lỗi hệ thống: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -42,25 +44,15 @@ $products = $productModel->getAllProducts();
     <title>Quản lý sản phẩm - Admin</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <link rel="stylesheet" href="../partials/header.css">
+    <link rel="stylesheet" href="/DACS/public/assets/css/styles.css">
     
     <style>
-        /* CSS Nội bộ cho trang Admin */
+        /* CSS Nội bộ cho trang Admin (Giữ nguyên style cũ của bạn) */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #0f172a; }
-        
-        .admin-container { 
-            max-width: 1200px; 
-            margin: 130px auto 30px; /* Cách top 130px để tránh đè header */
-            padding: 0 20px; 
-        }
-
-        .admin-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-        }
+        .admin-container { max-width: 1200px; margin: 100px auto 30px; padding: 0 20px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .admin-header h1 { font-size: 1.6rem; font-weight: 700; color: #0f172a; margin: 0; }
-
-        /* Button Thêm mới */
+        
         .btn-add {
             background: #10b981; color: #ffffff; padding: 10px 20px;
             text-decoration: none; border-radius: 8px; font-weight: 600;
@@ -69,73 +61,44 @@ $products = $productModel->getAllProducts();
         }
         .btn-add:hover { background: #059669; transform: translateY(-2px); }
 
-        /* Bảng dữ liệu */
         .product-table {
             width: 100%; border-collapse: separate; border-spacing: 0; 
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+            background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
             border-radius: 12px; overflow: hidden;
         }
-        
         .product-table th, .product-table td {
             padding: 16px 20px; text-align: left; 
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9; vertical-align: middle;
         }
-        
         .product-table th {
-            background-color: #f8fafc; 
-            color: #64748b; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            background-color: #f8fafc; color: #64748b; font-weight: 600; 
+            text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;
         }
-        
-        /* Hiệu ứng hover dòng */
-        .product-table tr:hover { background-color: #f1f5f9; }
-        .product-table tr:last-child td { border-bottom: none; }
-
-        /* Ảnh thumbnail */
         .thumb-img {
             width: 50px; height: 50px; object-fit: contain;
-            border-radius: 6px; border: 1px solid #e2e8f0;
-            background: #fff; padding: 2px;
+            border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; padding: 2px;
         }
-
-        /* Nút hành động (Sửa/Xóa) */
         .action-btn {
-            border: none; padding: 8px; border-radius: 6px;
-            cursor: pointer; font-size: 0.9rem; margin-right: 5px; 
-            text-decoration: none; color: white;
+            border: none; padding: 8px; border-radius: 6px; cursor: pointer;
+            font-size: 0.9rem; margin-right: 5px; text-decoration: none; color: white;
             display: inline-flex; align-items: center; justify-content: center;
             width: 32px; height: 32px; transition: 0.2s;
         }
-        .btn-edit { background: #f59e0b; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2); }
-        .btn-edit:hover { background: #d97706; transform: translateY(-2px); }
-        
-        .btn-delete { background: #ef4444; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2); }
-        .btn-delete:hover { background: #dc2626; transform: translateY(-2px); }
-
-        /* Thông báo Alert */
-        .alert {
-            padding: 15px; margin-bottom: 20px; border-radius: 8px; 
-            color: #ffffff; font-size: 0.95rem; font-weight: 500;
-            display: flex; align-items: center; gap: 10px;
-            animation: slideIn 0.3s ease;
-        }
+        .btn-edit { background: #f59e0b; }
+        .btn-delete { background: #ef4444; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; color: #fff; font-weight: 500; display: flex; align-items: center; gap: 10px; }
         .alert.success { background-color: #10b981; }
-        .alert.error   { background-color: #ef4444; }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .alert.error { background-color: #ef4444; }
     </style>
 </head>
 <body>
 
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php 
+// Kiểm tra file header có tồn tại không trước khi include để tránh lỗi
+if(file_exists(__DIR__ . '/../layouts/header.php')) {
+    include __DIR__ . '/../layouts/header.php'; 
+}
+?>
 
 <div class="admin-container">
     <div class="admin-header">
@@ -147,13 +110,8 @@ $products = $productModel->getAllProducts();
 
     <?php if (isset($_SESSION['flash_message'])): ?>
         <div class="alert <?= htmlspecialchars($_SESSION['flash_type'] ?? 'success'); ?>">
-            <?php if(($_SESSION['flash_type'] ?? '') == 'success'): ?>
-                <i class="fas fa-check-circle"></i>
-            <?php else: ?>
-                <i class="fas fa-exclamation-circle"></i>
-            <?php endif; ?>
+            <i class="<?= ($_SESSION['flash_type'] == 'success') ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'; ?>"></i>
             <?= htmlspecialchars($_SESSION['flash_message']); ?>
-            
             <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
         </div>
     <?php endif; ?>
@@ -176,13 +134,8 @@ $products = $productModel->getAllProducts();
                     <td style="color: #64748b; font-weight: 500;">#<?= (int)$row['id']; ?></td>
                     
                     <td>
-                        <?php
-                        // Xử lý đường dẫn ảnh bằng hàm helper để tránh lỗi ảnh chết
-                        $imgUrl = !empty($row['image_url']) 
-                            ? normalizeImageUrl($row['image_url']) 
-                            : '/DACS/public/assets/img/no-image.jpg';
-                        ?>
-                        <img src="<?= htmlspecialchars($imgUrl); ?>" class="thumb-img" alt="Product Image">
+                        <img src="<?= htmlspecialchars(ImageHelper::normalizeUrl($row['image_url'])); ?>" 
+                             class="thumb-img" alt="Product Image">
                     </td>
                     
                     <td style="font-weight: 600; color: #334155;">
@@ -196,7 +149,7 @@ $products = $productModel->getAllProducts();
                     </td>
                     
                     <td style="font-weight: 700; color: #dc2626;">
-                        <?= number_format((float)$row['price'], 0, ',', '.'); ?>đ
+                        <?= FormatHelper::formatPrice($row['price']); ?>
                     </td>
                     
                     <td style="text-align: center;">

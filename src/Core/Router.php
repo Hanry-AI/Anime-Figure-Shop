@@ -1,7 +1,6 @@
 <?php
 namespace DACS\Core;
 
-// Import các Controller cần dùng
 use DACS\Controllers\AuthController;
 use DACS\Controllers\ProductController;
 use DACS\Controllers\HomeController;
@@ -15,12 +14,12 @@ class Router {
         $this->conn = $dbConnection;
     }
 
-    public function run() {
-        $page   = $_GET['page'] ?? 'home';
-        $action = $_GET['action'] ?? 'index';
+    // [OOP] Nhận đối tượng Request thay vì dùng $_GET
+    public function resolve(Request $request) {
+        $page   = $request->get('page', 'home');
+        $action = $request->get('action', 'index');
 
         switch ($page) {
-            // --- AUTHENTICATION ---
             case 'auth':
             case 'login':
             case 'register':
@@ -32,7 +31,6 @@ class Router {
                 }
                 break;
 
-            // --- SẢN PHẨM ---
             case 'anime':
                 (new ProductController($this->conn))->indexAnime();
                 break;
@@ -49,7 +47,6 @@ class Router {
                 (new ProductController($this->conn))->detail(); 
                 break;
     
-            // --- CÁC TRANG KHÁC ---
             case 'cart':
                 (new CartController($this->conn))->index();
                 break;
@@ -66,7 +63,6 @@ class Router {
                 (new PageController($this->conn))->profile();
                 break;
 
-            // --- TRANG CHỦ ---
             case 'home':
             default:
                 (new HomeController($this->conn))->index();

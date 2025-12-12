@@ -1,3 +1,7 @@
+<?php
+// [QUAN TRỌNG] Sử dụng Class Helper định dạng tiền tệ
+use DACS\Helpers\FormatHelper;
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -28,11 +32,10 @@
     </div>
 
     <div class="cart-layout">
-        <!-- DANH SÁCH SẢN PHẨM -->
         <div class="cart-table-wrap">
             <?php if (empty($finalCart)): ?>
                 <div class="cart-empty">
-                    Giỏ hàng trống. <a href="/DACS/views/pages/index.php" class="btn-back">
+                    Giỏ hàng trống. <a href="/DACS/public/index.php" class="btn-back">
                         <i class="fas fa-arrow-left"></i> Quay lại mua sắm
                     </a>
                 </div>
@@ -67,13 +70,13 @@
                                 </div>
                             </td>
                             <td class="item-price">
-                                <?= format_price((float)$item['price']); ?>
+                                <?= FormatHelper::formatPrice((float)$item['price']); ?>
                             </td>
                             <td class="item-qty">
                                 <span class="item-qty-badge">x <?= (int)$item['qty'] ?></span>
                             </td>
                             <td class="item-line-total">
-                                <?= format_price((float)$item['line_total']); ?>
+                                <?= FormatHelper::formatPrice((float)$item['line_total']); ?>
                             </td>
                             <td class="item-actions">
                                 <button type="button"
@@ -89,14 +92,13 @@
             <?php endif; ?>
         </div>
 
-        <!-- TÓM TẮT & THANH TOÁN -->
         <div class="cart-summary">
             <div class="summary-title">Tóm tắt đơn hàng</div>
 
             <div class="summary-row">
                 <span class="summary-label">Tạm tính</span>
                 <span class="summary-value" id="subtotal-text">
-                    <?= format_price((float)$totalAmount); ?>
+                    <?= FormatHelper::formatPrice((float)$totalAmount); ?>
                 </span>
             </div>
             <div class="summary-row">
@@ -106,7 +108,7 @@
             <div class="summary-row total">
                 <span class="summary-label">Tổng thanh toán</span>
                 <span class="total-price" id="total-price-text">
-                    <?= format_price((float)$totalAmount); ?>
+                    <?= FormatHelper::formatPrice((float)$totalAmount); ?>
                 </span>
             </div>
 
@@ -120,13 +122,12 @@
                 </button>
             </div>
 
-            <!-- HÌNH QR (MẶC ĐỊNH ẨN) -->
             <div id="qr-box" class="qr-box" style="display:none;">
                 <img src="/DACS/public/assets/img/qr.jpg" alt="QR ngân hàng">
                 <div class="qr-note">
                     Quét mã QR để chuyển khoản với số tiền
                     <strong id="qr-amount">
-                        <?= format_price((float)$totalAmount); ?>
+                        <?= FormatHelper::formatPrice((float)$totalAmount); ?>
                     </strong>.<br>
                     Nội dung chuyển khoản: <strong>SĐT hoặc tên của bạn</strong>.
                 </div>
@@ -177,7 +178,7 @@
         // Nếu không còn dòng nào, reload về trang chủ cho sạch
         const tbody = document.querySelector('.cart-table tbody');
         if (!tbody || tbody.children.length === 0) {
-            window.location.href = '/DACS/index.php';
+            window.location.href = '/DACS/public/index.php';
         }
     });
 

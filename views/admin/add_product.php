@@ -1,123 +1,134 @@
 <?php
 session_start();
 
-// 1. Load các file cấu hình và Model
-require_once __DIR__ . '/../../src/Config/db.php';
-require_once __DIR__ . '/../../src/Models/Product.php';
+// Định nghĩa đường dẫn gốc (để trỏ về vendor/autoload)
+define('PROJECT_ROOT', dirname(dirname(__DIR__)));
 
-// Sử dụng Namespace của ProductModel
+// 1. [QUAN TRỌNG] Load Composer Autoload
+require_once PROJECT_ROOT . '/vendor/autoload.php';
+
+// 2. Sử dụng Namespace chuẩn
+use DACS\Config\Database;
 use DACS\Models\ProductModel;
 
-// 2. [BẢO MẬT] AUTH GUARD - Chặn người lạ
+// 3. [BẢO MẬT] AUTH GUARD - Chặn người lạ
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: /DACS/public/index.php');
     exit;
 }
 
-// 3. Khởi tạo ProductModel (Thay thế cho cách gọi hàm cũ)
-$productModel = new ProductModel($conn);
+try {
+    // 4. Khởi tạo Database & Model (Chuẩn OOP)
+    // Thay thế cho việc require db.php và dùng biến $conn trôi nổi
+    $db = new Database();
+    $conn = $db->getConnection();
+    $productModel = new ProductModel($conn);
 
-// 4. Định nghĩa các hằng số đường dẫn
-if (!defined('PROJECT_ROOT')) {
-    define('PROJECT_ROOT', dirname(dirname(__DIR__)));
-}
-if (!defined('UPLOAD_DIR')) define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
-if (!defined('DB_IMG_PATH')) define('DB_IMG_PATH', '/DACS/public/assets/img/');
+    // 5. Cấu hình upload
+    // Đường dẫn vật lý để lưu file
+    if (!defined('UPLOAD_DIR')) define('UPLOAD_DIR', PROJECT_ROOT . '/public/assets/img/');
+    // Đường dẫn web để lưu vào DB (Dạng tương đối assets/img/ten-anh.jpg)
+    // ImageHelper sẽ tự thêm /DACS/public/... vào trước khi hiển thị
+    if (!defined('DB_IMG_PATH')) define('DB_IMG_PATH', 'assets/img/');
 
-// --- Helper Functions ---
-function e($string) {
-    return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
-}
-
-function processUpload($fileInput, $targetDir) {
-    if (!isset($fileInput['name']) || $fileInput['error'] !== UPLOAD_ERR_OK) {
-        return null;
+    // --- Helper Functions ---
+    function e($string) {
+        return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
     }
-    // Chỉ cho phép ảnh
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($fileInput['type'], $allowedTypes)) {
+
+    function processUpload($fileInput) {
+        if (!isset($fileInput['name']) || $fileInput['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
+        
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($fileInput['type'], $allowedTypes)) {
+            return false;
+        }
+        
+        $ext = strtolower(pathinfo($fileInput['name'], PATHINFO_EXTENSION));
+        // Tạo tên file ngẫu nhiên để tránh trùng
+        $filename = time() . '_' . uniqid() . '.' . $ext;
+        $targetFilePath = UPLOAD_DIR . $filename;
+        
+        if (move_uploaded_file($fileInput['tmp_name'], $targetFilePath)) {
+            // Trả về tên file. ImageHelper sẽ xử lý phần path còn lại.
+            return $filename;
+        }
         return false;
     }
-    
-    $filename = basename($fileInput['name']);
-    // Thêm timestamp để tên file không bị trùng
-    $targetName = time() . '_' . $filename; 
-    $targetFilePath = $targetDir . $targetName;
-    
-    if (move_uploaded_file($fileInput['tmp_name'], $targetFilePath)) {
-        return $targetName;
-    }
-    return false;
-}
 
-// --- XỬ LÝ FORM SUBMIT ---
-$errors = [];
-$name = $category = $priceRaw = '';
+    // --- XỬ LÝ FORM SUBMIT ---
+    $errors = [];
+    $name = $category = $priceRaw = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name     = trim($_POST['name'] ?? '');
-    $category = trim($_POST['category'] ?? 'anime');
-    $priceRaw = trim($_POST['price'] ?? '0');
-    
-    // Validate dữ liệu
-    if ($name === '')     $errors[] = 'Tên sản phẩm là bắt buộc.';
-    if ($category === '') $errors[] = 'Danh mục là bắt buộc.';
-    if ($priceRaw === '') $errors[] = 'Giá là bắt buộc.';
-
-    $priceDigits = preg_replace('/[^\d]/', '', $priceRaw);
-    $priceValue = ($priceDigits === '') ? 0 : (int)$priceDigits;
-    if ($priceValue <= 0) $errors[] = 'Giá sản phẩm phải lớn hơn 0.';
-
-    if (empty($_FILES['main_image']['name'])) {
-        $errors[] = 'Vui lòng chọn Ảnh chính.';
-    }
-
-    // Nếu không có lỗi thì xử lý upload
-    if (empty($errors)) {
-        // 1. Upload Ảnh Chính
-        $uploadedMain = processUpload($_FILES['main_image'], UPLOAD_DIR);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $name     = trim($_POST['name'] ?? '');
+        $category = trim($_POST['category'] ?? 'anime');
+        $priceRaw = trim($_POST['price'] ?? '0');
         
-        if ($uploadedMain === false) {
-            $errors[] = 'Lỗi upload ảnh chính (File lỗi hoặc sai định dạng).';
-        } elseif ($uploadedMain === null) {
-            $errors[] = 'Vui lòng chọn ảnh chính hợp lệ.';
-        } else {
-            $mainImgUrl = DB_IMG_PATH . $uploadedMain;
+        // Validate
+        if ($name === '')     $errors[] = 'Tên sản phẩm là bắt buộc.';
+        if ($category === '') $errors[] = 'Danh mục là bắt buộc.';
+        if ($priceRaw === '') $errors[] = 'Giá là bắt buộc.';
 
-            // 2. Upload Ảnh Phụ (Nếu có)
-            $extraImgUrls = [];
-            if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
-                $totalFiles = count($_FILES['extra_images']['name']);
-                for ($i = 0; $i < $totalFiles; $i++) {
-                    $singleFile = [
-                        'name'     => $_FILES['extra_images']['name'][$i],
-                        'type'     => $_FILES['extra_images']['type'][$i],
-                        'tmp_name' => $_FILES['extra_images']['tmp_name'][$i],
-                        'error'    => $_FILES['extra_images']['error'][$i],
-                        'size'     => $_FILES['extra_images']['size'][$i]
-                    ];
-                    $uploadedExtra = processUpload($singleFile, UPLOAD_DIR);
-                    if ($uploadedExtra) {
-                        $extraImgUrls[] = DB_IMG_PATH . $uploadedExtra;
+        $priceDigits = preg_replace('/[^\d]/', '', $priceRaw);
+        $priceValue = ($priceDigits === '') ? 0 : (int)$priceDigits;
+        if ($priceValue <= 0) $errors[] = 'Giá sản phẩm phải lớn hơn 0.';
+
+        if (empty($_FILES['main_image']['name'])) {
+            $errors[] = 'Vui lòng chọn Ảnh chính.';
+        }
+
+        if (empty($errors)) {
+            // 1. Upload Ảnh Chính
+            $uploadedMainName = processUpload($_FILES['main_image']);
+            
+            if ($uploadedMainName === false) {
+                $errors[] = 'Lỗi upload ảnh chính (File lỗi hoặc sai định dạng).';
+            } elseif ($uploadedMainName === null) {
+                $errors[] = 'Vui lòng chọn ảnh chính hợp lệ.';
+            } else {
+                // Lưu tên file vào DB (VD: 17345678_abc.jpg)
+                $mainImgToSave = DB_IMG_PATH . $uploadedMainName;
+
+                // 2. Upload Ảnh Phụ
+                $extraImgUrls = [];
+                if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
+                    $totalFiles = count($_FILES['extra_images']['name']);
+                    for ($i = 0; $i < $totalFiles; $i++) {
+                        $singleFile = [
+                            'name'     => $_FILES['extra_images']['name'][$i],
+                            'type'     => $_FILES['extra_images']['type'][$i],
+                            'tmp_name' => $_FILES['extra_images']['tmp_name'][$i],
+                            'error'    => $_FILES['extra_images']['error'][$i],
+                            'size'     => $_FILES['extra_images']['size'][$i]
+                        ];
+                        $uploadedExtraName = processUpload($singleFile);
+                        if ($uploadedExtraName) {
+                            $extraImgUrls[] = DB_IMG_PATH . $uploadedExtraName;
+                        }
                     }
                 }
-            }
 
-            // 3. GỌI MODEL ĐỂ LƯU (Đã sửa theo chuẩn OOP)
-            // Gọi phương thức addProduct từ đối tượng $productModel
-            $newId = $productModel->addProduct($name, $category, $priceValue, $mainImgUrl, $extraImgUrls);
+                // 3. GỌI MODEL ĐỂ LƯU
+                $newId = $productModel->addProduct($name, $category, $priceValue, $mainImgToSave, $extraImgUrls);
 
-            if ($newId) {
-                $_SESSION['flash_message'] = "Thêm thành công sản phẩm ID: $newId";
-                $_SESSION['flash_type'] = 'success';
-                
-                header('Location: manage_products.php');
-                exit;
-            } else {
-                $errors[] = "Lỗi hệ thống: Không thể lưu vào Database.";
+                if ($newId) {
+                    $_SESSION['flash_message'] = "Thêm thành công sản phẩm ID: $newId";
+                    $_SESSION['flash_type'] = 'success';
+                    
+                    header('Location: manage_products.php');
+                    exit;
+                } else {
+                    $errors[] = "Lỗi hệ thống: Không thể lưu vào Database.";
+                }
             }
         }
     }
+
+} catch (Exception $e) {
+    die("Lỗi hệ thống: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -127,10 +138,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm sản phẩm - Admin FigureWorld</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../layouts/header.css">
+    <link rel="stylesheet" href="/DACS/public/assets/css/styles.css">
     <link rel="stylesheet" href="/DACS/public/assets/css/contact_styles.css">
     <style>
-        /* CSS cho phần thêm ảnh */
         .remove-img-btn {
             background: #ffecec; color: #ff4d4d; border: 1px solid #ff4d4d;
             padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem;
@@ -145,15 +155,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .add-more-btn:hover { background: #cbd5e0; }
         input[type="file"] { padding: 8px; background: #fff; }
-        
         .contact-form-card { max-width: 800px; margin: 0 auto; }
     </style>
 </head>
 <body>
+    
     <?php include __DIR__ . '/../layouts/header.php'; ?>
 
-    <section class="contact-hero" style="padding: 40px 0; background: #f1f5f9;">
-        <div class="contact-hero-inner">
+    <section class="contact-hero" style="padding: 40px 0; background: #f1f5f9; margin-top: 80px;">
+        <div class="contact-hero-inner" style="text-align: center;">
             <h1 style="color: #0f172a;">🛠 Thêm Sản Phẩm Mới</h1>
         </div>
     </section>
@@ -216,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <a href="manage_products.php" class="submit-btn" style="background: #64748b; text-align: center; text-decoration: none;">
+                    <a href="manage_products.php" class="submit-btn" style="background: #64748b; text-align: center; text-decoration: none; display:inline-block; padding: 12px 20px; color:white; border-radius:6px;">
                         Hủy bỏ
                     </a>
                     <button type="submit" class="submit-btn">
@@ -228,7 +238,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script src="/DACS/public/assets/js/scripts.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const btnAdd = document.getElementById('btnAddImage');

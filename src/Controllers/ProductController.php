@@ -1,8 +1,9 @@
 <?php
 namespace DACS\Controllers;
 
-// [QUAN TRỌNG] Chỉ use Namespace, không require file thủ công
 use DACS\Models\ProductModel;
+use DACS\Core\Request;  // [MỚI] Sử dụng Class Request
+use DACS\Core\View;     // [MỚI] Sử dụng Class View
 
 class ProductController {
     private $conn;
@@ -10,35 +11,62 @@ class ProductController {
 
     public function __construct($db) {
         $this->conn = $db;
-        // Composer tự tìm file ProductModel.php
         $this->productModel = new ProductModel($db);
     }
 
-    public function indexAnime() {
+    /**
+     * TRANG ANIME
+     * @param Request $request Biến request được Router truyền vào
+     */
+    public function indexAnime(Request $request) {
         $products = $this->productModel->getProductsByCategory('anime');
-        require_once __DIR__ . '/../../views/pages/anime_index.php';
+        
+        // [MỚI] Gọi View chuẩn OOP, truyền dữ liệu qua mảng
+        View::render('pages/anime_index', [
+            'products' => $products
+        ]);
     }
 
-    public function indexGundam() {
+    /**
+     * TRANG GUNDAM (Có phân trang)
+     */
+    public function indexGundam(Request $request) {
         $limit = 10;
-        $page = isset($_GET['page_num']) ? (int)$_GET['page_num'] : 1; 
+        
+        // [MỚI] Thay thế $_GET['page_num'] bằng $request->get()
+        // Hàm get() của bạn đã viết sẵn logic: nếu không có thì lấy giá trị mặc định (1)
+        $page = (int)$request->get('page_num', 1);
         if ($page < 1) $page = 1;
+        
         $offset = ($page - 1) * $limit;
     
         $products = $this->productModel->getProductsByCategory('gundam', $limit, $offset);
         $totalProducts = $this->productModel->countProductsByCategory('gundam');
         $totalPages = ceil($totalProducts / $limit);
     
-        require_once __DIR__ . '/../../views/pages/gundam_index.php';
+        // [MỚI] Render View
+        View::render('pages/gundam_index', [
+            'products'      => $products,
+            'totalPages'    => $totalPages,
+            'page'          => $page
+        ]);
     }
 
-    public function indexMarvel() {
+    /**
+     * TRANG MARVEL
+     */
+    public function indexMarvel(Request $request) {
         $products = $this->productModel->getProductsByCategory('marvel');
-        require_once __DIR__ . '/../../views/pages/marvel_index.php';
+        View::render('pages/marvel_index', ['products' => $products]);
     }
 
-    public function detail() {
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    /**
+     * TRANG CHI TIẾT SẢN PHẨM
+     */
+    public function detail(Request $request) {
+        // [MỚI] Lấy ID từ request object
+        $id = (int)$request->get('id', 0);
+
         $product = $this->productModel->getProductById($id);
 
         if (!$product) {
@@ -48,10 +76,15 @@ class ProductController {
 
         $images = $this->productModel->getProductImages($id);
         $relatedProducts = $this->productModel->getRelatedProducts($product['category'], $id);
-        
         $firstImg = $product['image_url']; 
 
-        require_once __DIR__ . '/../../views/pages/product.php';
+        // [MỚI] Render View
+        View::render('pages/product', [
+            'product'         => $product,
+            'images'          => $images,
+            'relatedProducts' => $relatedProducts,
+            'firstImg'        => $firstImg
+        ]);
     }
 }
 ?>

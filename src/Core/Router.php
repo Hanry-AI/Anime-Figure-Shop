@@ -14,54 +14,32 @@ class Router {
         $this->conn = $dbConnection;
     }
 
-    // [OOP] Nhận đối tượng Request thay vì dùng $_GET
     public function resolve(Request $request) {
+        // Lấy thông tin page từ Request object (thay vì $_GET)
         $page   = $request->get('page', 'home');
         $action = $request->get('action', 'index');
 
         switch ($page) {
-            case 'auth':
-            case 'login':
-            case 'register':
-                $controller = new AuthController($this->conn);
-                if ($action === 'logout') {
-                    $controller->logout();
-                } else {
-                    $controller->index();
-                }
-                break;
+            // --- CÁC ROUTE CŨ ... ---
 
             case 'anime':
-                (new ProductController($this->conn))->indexAnime();
+                // [QUAN TRỌNG] Truyền $request vào hàm indexAnime
+                (new ProductController($this->conn))->indexAnime($request);
                 break;
                 
             case 'gundam':
-                (new ProductController($this->conn))->indexGundam();
+                (new ProductController($this->conn))->indexGundam($request);
                 break;
                 
             case 'marvel':
-                (new ProductController($this->conn))->indexMarvel();
+                (new ProductController($this->conn))->indexMarvel($request);
                 break;
     
             case 'product':
-                (new ProductController($this->conn))->detail(); 
+                (new ProductController($this->conn))->detail($request); 
                 break;
     
-            case 'cart':
-                (new CartController($this->conn))->index();
-                break;
-
-            case 'contact':
-                (new PageController($this->conn))->contact();
-                break;
-    
-            case 'promo':
-                (new PageController($this->conn))->promo();
-                break;
-                
-            case 'profile':
-                (new PageController($this->conn))->profile();
-                break;
+            // ... (Các case khác bạn cũng nên truyền $request vào nếu cần dùng) ...
 
             case 'home':
             default:

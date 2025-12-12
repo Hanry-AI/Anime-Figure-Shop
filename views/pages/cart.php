@@ -178,7 +178,7 @@ use DACS\Helpers\FormatHelper;
         // Nếu không còn dòng nào, reload về trang chủ cho sạch
         const tbody = document.querySelector('.cart-table tbody');
         if (!tbody || tbody.children.length === 0) {
-            window.location.href = '/DACS/public/index.php';
+            location.reload();
         }
     });
 

@@ -4,6 +4,7 @@ namespace DACS\Controllers;
 use DACS\Models\ProductModel;
 use DACS\Core\Request;  // [MỚI] Sử dụng Class Request
 use DACS\Core\View;     // [MỚI] Sử dụng Class View
+use DACS\Helpers\ImageHelper;
 
 class ProductController {
     private $conn;
@@ -104,5 +105,7 @@ class ProductController {
             'firstImg'        => $firstImg
         ]);
     }
+
+    
 }
 ?>

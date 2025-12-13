@@ -2,16 +2,19 @@
 namespace DACS\Controllers;
 
 use DACS\Models\ProductModel;
+use DACS\Models\UserModel; // [QUAN TRỌNG 1] Thêm dòng này để dùng được UserModel
 use DACS\Core\Request;
 use DACS\Core\View;
 use DACS\Helpers\ImageHelper; 
 
 class CartController {
     private $productModel;
+    private $userModel; // [QUAN TRỌNG 2] Khai báo biến userModel
 
     public function __construct($db) {
         // Chỉ khởi tạo những gì cần thiết
         $this->productModel = new ProductModel($db);
+        $this->userModel = new UserModel($db); // [QUAN TRỌNG 3] Khởi tạo UserModel
         
         // Đảm bảo giỏ hàng tồn tại (ngắn gọn hơn)
         $_SESSION['cart'] = $_SESSION['cart'] ?? [];
@@ -140,6 +143,7 @@ class CartController {
         session_start();       // Mở lại session để các lệnh sau vẫn dùng được nếu cần
 
         if (isset($_SESSION['user_id'])) {
+            // Bây giờ dòng này sẽ chạy ngon lành vì userModel đã được khởi tạo
             $this->userModel->updateCart($_SESSION['user_id'], $_SESSION['cart']);
         }
     }
@@ -151,4 +155,3 @@ class CartController {
         exit;
     }
 }
-?>

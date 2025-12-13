@@ -24,7 +24,8 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     $cartCount = array_sum($_SESSION['cart']);
 }
 ?>
-
+<link rel="shortcut icon" href="/assets/img/logo.png" type="image/x-icon">
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="/DACS/views/layouts/header.css">
 <link rel="stylesheet" href="/DACS/views/layouts/footer.css">
 <link rel="stylesheet" href="/DACS/public/assets/css/cart.css">

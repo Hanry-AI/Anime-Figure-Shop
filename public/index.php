@@ -24,6 +24,12 @@ try {
     // Bắt tất cả lỗi (Exception & Error)
     // Trong môi trường Production nên ghi log thay vì echo
     error_log($e->getMessage());
-    echo "Đã có lỗi xảy ra. Vui lòng thử lại sau.";
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
+    exit;
 }
+
+
 ?>

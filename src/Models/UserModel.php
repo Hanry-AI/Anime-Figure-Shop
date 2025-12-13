@@ -111,5 +111,24 @@ class UserModel {
             return "Lỗi hệ thống: " . $stmt->error;
         }
     }
+
+    public function updateCart($userId, $cartData) {
+        // Chuyển mảng thành chuỗi JSON để lưu
+        $json = json_encode($cartData);
+        $stmt = $this->conn->prepare("UPDATE users SET cart_data = ? WHERE id = ?");
+        $stmt->bind_param("si", $json, $userId);
+        return $stmt->execute();
+    }
+    
+    public function getCartData($userId) {
+        $stmt = $this->conn->prepare("SELECT cart_data FROM users WHERE id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return json_decode($row['cart_data'], true) ?? [];
+        }
+        return [];
+    }
 }
 ?>

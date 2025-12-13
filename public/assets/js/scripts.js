@@ -203,11 +203,11 @@ function renderCartDrawer(data) {
                     <div class="cart-drawer-price">${item.price_formatted}</div>
                     
                     <div class="cart-drawer-controls">
-                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.quantity - 1})">-</button>
+                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.qty - 1})">-</button>
                         
-                        <span class="qty-display">${item.quantity}</span>
+                        <span class="qty-display">${item.qty}</span>
                         
-                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.quantity + 1})">+</button>
+                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.qty + 1})">+</button>
                     </div>
                 </div>
 

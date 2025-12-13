@@ -14,6 +14,24 @@ class ProductController {
         $this->productModel = new ProductModel($db);
     }
 
+    public function manage() {
+        // 1. Kiểm tra quyền Admin (Security)
+        // Giả sử bạn lưu role trong session. Nếu không phải admin thì đá về home
+        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+            header('Location: /'); 
+            exit;
+        }
+    
+        // 2. Lấy danh sách sản phẩm để hiển thị
+        $products = $this->productModel->getAllProducts(); // Đảm bảo ProductModel có hàm này
+    
+        // 3. Render view admin
+        // Lưu ý: Đường dẫn view tính từ thư mục views/
+        View::render('admin/manage_products', [
+            'products' => $products
+        ]);
+    }
+
     /**
      * TRANG ANIME
      * @param Request $request Biến request được Router truyền vào

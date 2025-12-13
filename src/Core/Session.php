@@ -7,6 +7,7 @@ use DACS\Core\DbSessionHandler;
 
 class Session {
     public function __construct() {
+        // Chỉ start nếu chưa có session nào đang chạy
         if (session_status() === PHP_SESSION_NONE) {
             
             // 1. Kết nối Database
@@ -14,14 +15,16 @@ class Session {
             $conn = $db->getConnection();
 
             // 2. Kích hoạt chế độ lưu vào Database
+            // Đảm bảo DbSessionHandler đã được require hoặc autoload
             $handler = new DbSessionHandler($conn);
+            
+            // Đăng ký handler
             session_set_save_handler($handler, true);
 
-            // 3. Bây giờ mới start session
+            // 3. Start session
             session_start();
         }
     }
-
     // Các hàm get/set bên dưới giữ nguyên không đổi
     public static function get($key, $default = null) {
         return $_SESSION[$key] ?? $default;

@@ -1,7 +1,7 @@
 /**
  * SCRIPTS.JS - LOGIC CLIENT HOÀN CHỈNH
  * --------------------------------------
- * 1. Thêm/Xóa giỏ hàng qua AJAX (Server Session).
+ * 1. Thêm/Sửa/Xóa giỏ hàng qua AJAX (Server Session).
  * 2. Quản lý Sidebar Giỏ hàng (Drawer).
  * 3. Các hiệu ứng UI (Toast, Loading, Dropdown).
  */
@@ -10,9 +10,7 @@
    1. CÁC HÀM TIỆN ÍCH (UTILITIES)
    ================================================================= */
 
-/**
- * Hiển thị thông báo nổi (Toast)
- */
+// Hiển thị thông báo nổi (Toast)
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -70,8 +68,9 @@ function addToCart(product) {
             showToast('Đã thêm vào giỏ!', 'success');
             // Cập nhật số lượng trên icon
             updateCartBadge(data.total_count);
-            // Mở sidebar để khách thấy ngay
-            toggleCart(); 
+            
+            // [ĐÃ TẮT] Không tự động mở sidebar nữa theo yêu cầu của bạn
+            // toggleCart(); 
         } else {
             showToast('Lỗi: ' + data.message, 'error');
         }
@@ -83,10 +82,30 @@ function addToCart(product) {
 }
 
 /**
+ * Cập nhật số lượng sản phẩm (+/-)
+ */
+function updateCartItem(id, newQty) {
+    // Gọi API update
+    fetch('/DACS/public/index.php?page=cart&action=update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, quantity: newQty })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Load lại sidebar để cập nhật giá tiền mới
+            toggleCart(true); 
+        }
+    })
+    .catch(err => console.error('Lỗi update:', err));
+}
+
+/**
  * Xóa sản phẩm khỏi giỏ (Gửi API)
  */
 function removeFromCartDrawer(id) {
-    if (!confirm('Bạn muốn xóa sản phẩm này?')) return;
+    if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
     
     fetch('/DACS/public/index.php?page=cart&action=delete', {
         method: 'POST',
@@ -96,16 +115,16 @@ function removeFromCartDrawer(id) {
     .then(res => res.json())
     .then(data => {
         // Tải lại nội dung sidebar để cập nhật danh sách
-        toggleCart(); 
+        toggleCart(true); 
     })
     .catch(err => console.error(err));
 }
 
 /**
  * Mở / Đóng Sidebar Giỏ hàng
- * - Nếu đang đóng -> Gọi API lấy dữ liệu -> Vẽ HTML -> Mở ra
+ * @param {boolean} forceOpen - Bắt buộc mở (dùng khi vừa update xong)
  */
-function toggleCart() {
+function toggleCart(forceOpen = false) {
     const overlay = document.getElementById('cartOverlay');
     const drawer = document.getElementById('cartDrawer');
     const itemsContainer = document.getElementById('cartItems');
@@ -116,12 +135,21 @@ function toggleCart() {
         return;
     }
 
+    // Logic Đóng/Mở
+    const isOpen = drawer.classList.contains('active');
+    if (isOpen && !forceOpen) {
+        closeCartDrawer();
+        return;
+    }
+
     // Hiển thị khung sidebar
     overlay.classList.add('active');
     drawer.classList.add('active');
     
-    // Hiện loading trong lúc chờ dữ liệu
-    if (itemsContainer) itemsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Đang tải giỏ hàng...</div>';
+    // Hiện loading nếu chưa có dữ liệu (chỉ hiện khi mở lần đầu)
+    if (!forceOpen && itemsContainer) {
+        itemsContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Đang tải...</div>';
+    }
 
     // Gọi API lấy dữ liệu giỏ hàng mới nhất từ Session
     fetch('/DACS/public/index.php?page=cart&action=api_info')
@@ -132,7 +160,7 @@ function toggleCart() {
         })
         .catch(err => {
             console.error(err);
-            itemsContainer.innerHTML = '<p style="padding:20px;color:red;text-align:center;">Lỗi tải dữ liệu.</p>';
+            if (itemsContainer) itemsContainer.innerHTML = '<p style="padding:20px;color:red;text-align:center;">Lỗi tải dữ liệu.</p>';
         });
 }
 
@@ -144,7 +172,7 @@ function closeCartDrawer() {
 }
 
 /**
- * Vẽ HTML danh sách sản phẩm lên Sidebar
+ * Vẽ HTML danh sách sản phẩm lên Sidebar (Giao diện mới)
  */
 function renderCartDrawer(data) {
     const itemsEl = document.getElementById('cartItems');
@@ -163,27 +191,29 @@ function renderCartDrawer(data) {
         return;
     }
 
-    // Trường hợp có hàng
+    // Trường hợp có hàng: Vẽ HTML với class mới (cart-drawer-item)
     let html = '';
     data.items.forEach(item => {
         html += `
-            <div class="cart-item" style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px dashed #eee;">
-                <div style="flex:1; padding-right:10px;">
-                    <div class="cart-item-title" style="font-weight:600; font-size:14px; margin-bottom:4px;">
-                        ${item.name}
-                    </div>
-                    <div class="cart-item-sub" style="font-size:12px; color:#666;">
-                        ${item.price_formatted} x ${item.quantity}
+            <div class="cart-drawer-item">
+                <img src="${item.img}" class="cart-drawer-thumb" alt="${item.name}">
+                
+                <div class="cart-drawer-info">
+                    <div class="cart-drawer-title">${item.name}</div>
+                    <div class="cart-drawer-price">${item.price_formatted}</div>
+                    
+                    <div class="cart-drawer-controls">
+                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.quantity - 1})">-</button>
+                        
+                        <span class="qty-display">${item.quantity}</span>
+                        
+                        <button class="btn-qty" onclick="updateCartItem(${item.id}, ${item.quantity + 1})">+</button>
                     </div>
                 </div>
-                <div style="text-align:right;">
-                    <div class="cart-item-price" style="font-weight:700; color:#e53e3e; margin-bottom:5px;">
-                        ${(item.line_total).toLocaleString('vi-VN')}₫
-                    </div>
-                    <button onclick="removeFromCartDrawer(${item.id})" style="border:none; background:none; color:#999; cursor:pointer; font-size:12px;">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
-                </div>
+
+                <button class="btn-delete" onclick="removeFromCartDrawer(${item.id})" title="Xóa">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         `;
     });

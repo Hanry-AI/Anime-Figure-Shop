@@ -178,7 +178,6 @@ use DACS\Helpers\FormatHelper;
          * @param {number} productId - ID sản phẩm cần xóa
          */
         function removeItemFromCart(productId) {
-            if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
 
             // Gọi API về CartController để xóa trong Session
             fetch('/DACS/public/index.php?page=cart&action=delete', {

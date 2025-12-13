@@ -105,8 +105,6 @@ function updateCartItem(id, newQty) {
  * Xóa sản phẩm khỏi giỏ (Gửi API)
  */
 function removeFromCartDrawer(id) {
-    if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
-    
     fetch('/DACS/public/index.php?page=cart&action=delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
